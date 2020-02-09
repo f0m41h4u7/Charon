@@ -1,0 +1,7 @@
+apiVersion: app.example.com/v1alpha1
+kind: Charon
+metadata:
+  name: example-charon
+spec:
+  # Add fields here
+  size: 3
