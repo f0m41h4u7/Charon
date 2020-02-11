@@ -35,4 +35,4 @@ data:
         scrape_interval: 10s
         static_configs:
         - targets:
-          - 10.244.0.14:1337
+          - 10.244.0.13:1337
