@@ -15,8 +15,7 @@ spec:
       serviceAccountName: charon-operator
       containers:
         - name: charon-operator
-          # Replace this with the built image name
-          image: REPLACE_IMAGE
+          image: localhost:5000/charon-operator:v12
           command:
           - charon-operator
           imagePullPolicy: Always

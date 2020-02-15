@@ -67,7 +67,7 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - app.example.com
+  - charon.charon.cr
   resources:
   - '*'
   verbs:

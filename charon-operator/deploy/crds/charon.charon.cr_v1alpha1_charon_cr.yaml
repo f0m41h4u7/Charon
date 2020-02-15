@@ -1,4 +1,4 @@
-apiVersion: app.example.com/v1alpha1
+apiVersion: charon.charon.cr/v1alpha1
 kind: Charon
 metadata:
   name: example-charon

@@ -5,11 +5,22 @@ import (
 )
 
 type CharonSpec struct {
+	Registry string `json:"registry"`
+        Image string `json:"image"`
+        Version string `json:"version"`
 }
 
 type CharonStatus struct {
+        Registry string `json:"registry"`
+        Image string `json:"image"`
+        Version string `json:"version"`
+        VersionChanged bool `json:"version_changed"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:path=charons,scope=Namespaced
 type Charon struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -17,6 +28,8 @@ type Charon struct {
 	Spec   CharonSpec   `json:"spec,omitempty"`
 	Status CharonStatus `json:"status,omitempty"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type CharonList struct {
 	metav1.TypeMeta `json:",inline"`

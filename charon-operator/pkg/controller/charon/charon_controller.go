@@ -3,7 +3,7 @@ package charon
 import (
 	"context"
 
-	appv1alpha1 "charon-operator/pkg/apis/app/v1alpha1"
+	charonv1alpha1 "charon-operator/pkg/apis/charon/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -22,8 +22,6 @@ import (
 
 var log = logf.Log.WithName("controller_charon")
 
-// Add creates a new Charon Controller and adds it to the Manager. The Manager will set fields on the Controller
-// and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
 }
@@ -38,17 +36,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to primary resource Charon
-	err = c.Watch(&source.Kind{Type: &appv1alpha1.Charon{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &charonv1alpha1.Charon{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner Charon
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &appv1alpha1.Charon{},
+		OwnerType:    &charonv1alpha1.Charon{},
 	})
 	if err != nil {
 		return err
@@ -60,63 +55,67 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 var _ reconcile.Reconciler = &ReconcileCharon{}
 
 type ReconcileCharon struct {
-	// This client, initialized using mgr.Client() above, is a split client
-	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a Charon object and makes changes based on the state read
-// and what is in the Charon.Spec
-// The Controller will requeue the Request to be processed again if the returned error is non-nil or
-// Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileCharon) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling Charon")
 
-	// Fetch the Charon instance
-	instance := &appv1alpha1.Charon{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			return reconcile.Result{}, nil
-		}
-		return reconcile.Result{}, err
-	}
+	instance := &charonv1alpha1.Charon{}
+        err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+        if err != nil {
+                if errors.IsNotFound(err) {
+                        // Request object not found, could have been deleted after reconcile request.
+                        // Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+                        // Return and don't requeue
+                        return reconcile.Result{}, nil
+                }
+                // Error reading the object - requeue the request.
+                return reconcile.Result{}, err
+        }
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
+        // If pod doesn't exist, create one
+        pod := &corev1.Pod{}
+        err = r.client.Get(context.Background(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, pod)
+        if err != nil && errors.IsNotFound(err) {
+                reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
+                pod := newPodForCR(instance)
 
-	// Set Charon instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-		return reconcile.Result{}, err
-	}
+                // Set Test instance as the owner and controller                                                 
+                if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
+                       return reconcile.Result{}, err
+                }
 
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
+//        found := &corev1.Pod{}                                                                           
+                err = r.client.Create(context.TODO(), pod)
+                if err != nil {
+                        return reconcile.Result{}, err
+                }
 
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
-	}
+                // Pod created successfully - don't requeue                                               
+                return reconcile.Result{}, nil
+        }
+        // If exists, check for updates                                                                                                        
+//      if instanse.Status.VersionChanged {
+        //      instance.Status.VersionChanged = false
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
-	return reconcile.Result{}, nil
+        // ......
+
+//              err = r.client.Status().Update(context.Background(), instance)
+//              if err != nil {
+//                      reqLogger.Error(err, "Failed to update pod status", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
+//                      return reconcile.Result{}, err
+//              }
+//              return reconcile.Result{Requeue: true}, nil
+//      }
+        reqLogger.Info("Skip reconcile: Pod already exists and up-to-date", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name) 
+        return reconcile.Result{}, nil
 }
 
-func newPodForCR(cr *appv1alpha1.Charon) *corev1.Pod {
+// newPodForCR returns a busybox pod with the same name/namespace as the cr
+func newPodForCR(cr *charonv1alpha1.Charon) *corev1.Pod {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
@@ -129,9 +128,9 @@ func newPodForCR(cr *appv1alpha1.Charon) *corev1.Pod {
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
+					Name:    cr.Name, //Command: []string{"sleep", "3600"},
+					Image:   cr.Spec.Image,
+					Command: []string{"go", "run", "$GOPATH/server.go"},
 				},
 			},
 		},

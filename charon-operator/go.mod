@@ -3,7 +3,7 @@ module charon-operator
 go 1.13
 
 require (
-	github.com/operator-framework/operator-sdk v0.15.1-0.20200207202803-a3270712bbd3
+	github.com/operator-framework/operator-sdk v0.15.1-0.20200214202031-7a3da2f203ba
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
@@ -37,3 +37,5 @@ replace (
 )
 
 replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // Required by Helm
+
+replace github.com/openshift/api => github.com/openshift/api v0.0.0-20190924102528-32369d4db2ad // Required until https://github.com/operator-framework/operator-lifecycle-manager/pull/1241 is resolved
