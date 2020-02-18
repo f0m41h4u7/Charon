@@ -32,10 +32,10 @@ spec:
           description: CharonSpec defines the desired state of Charon
           type: object
           properties:
-            registry:                                                                                                                                        
-              format: string                                                                                                                                 
+            registry:                         
+              format: string                         
               type: string                                                             
-            image:                                                                                                                                           
+            image:               
               format: string                                                      
               type: string
             version:        
@@ -48,10 +48,10 @@ spec:
           description: CharonStatus defines the observed state of Charon
           type: object
           properties:
-            registry:                                                                                                                                        
-              format: string                                                                                                                                 
+            registry:                                                                                                               
+              format: string                         
               type: string                                                             
-            image:                                                                                                                                           
+            image:             
               format: string                                                      
               type: string
             version:        
