@@ -15,10 +15,10 @@ spec:
       serviceAccountName: charon-operator
       containers:
         - name: charon-operator
-          image: f0m41h4u7/charon-operator:v1.0
+          image: localhost:5000/charon-operator:v1
           command:
           - charon-operator
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           env:
             - name: WATCH_NAMESPACE
               valueFrom:

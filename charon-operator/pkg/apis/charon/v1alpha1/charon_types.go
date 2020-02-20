@@ -5,16 +5,11 @@ import (
 )
 
 type CharonSpec struct {
-	Registry string `json:"registry"`
-        Image string `json:"image"`
-        Version string `json:"version"`
+	Image string `json:"image"`
 }
 
 type CharonStatus struct {
-        Registry string `json:"registry"`
-        Image string `json:"image"`
-        Version string `json:"version"`
-        VersionChanged bool `json:"version_changed"`
+	Image string `json:"image"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

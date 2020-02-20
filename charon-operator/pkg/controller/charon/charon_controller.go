@@ -2,8 +2,9 @@ package charon
 
 import (
 	"context"
-	"fmt"
+
 	charonv1alpha1 "charon-operator/pkg/apis/charon/v1alpha1"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,6 +48,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -62,32 +64,36 @@ func (r *ReconcileCharon) Reconcile(request reconcile.Request) (reconcile.Result
 	reqLogger.Info("Reconciling Charon")
 
 	instance := &charonv1alpha1.Charon{}
-        err := r.client.Get(context.TODO(), request.NamespacedName, instance)
-        if err != nil {
-                if errors.IsNotFound(err) {
-                        return reconcile.Result{}, nil
-                }
-                return reconcile.Result{}, err
-        }
+	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return reconcile.Result{}, nil
+		}
+		return reconcile.Result{}, err
+	}
 
-	pod := &corev1.Pod{}
-        err = r.client.Get(context.Background(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, pod)
-        if err != nil && errors.IsNotFound(err) {
-                reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-                pod := newPodForCR(instance)
+	pod := newPodForCR(instance)
 
-                if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-                       return reconcile.Result{}, err
-                }
-		err = r.client.Status().Update(context.Background(), instance)
+	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	found := &corev1.Pod{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
+		err = r.client.Create(context.TODO(), pod)
 		if err != nil {
-                        reqLogger.Error(err, "Failed to update pod status", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-                        return reconcile.Result{}, err
-                }
-                return reconcile.Result{Requeue: true}, nil
-        }
-        reqLogger.Info("Skip reconcile: Pod already exists and up-to-date", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name) 
-        return reconcile.Result{}, nil
+			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{}, nil
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
+	return reconcile.Result{}, nil
 }
 
 func newPodForCR(cr *charonv1alpha1.Charon) *corev1.Pod {
@@ -105,10 +111,9 @@ func newPodForCR(cr *charonv1alpha1.Charon) *corev1.Pod {
 				{
 					Name:    cr.Name,
 					Image:   cr.Spec.Image,
-					Command: []string{"go", "run", "$GOPATH/server.go"},
+					ImagePullPolicy: "IfNotPresent",
 				},
 			},
-			RestartPolicy: "Never",
 		},
 	}
 }
