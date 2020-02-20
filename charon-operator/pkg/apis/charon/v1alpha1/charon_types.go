@@ -6,10 +6,13 @@ import (
 
 type CharonSpec struct {
 	Image string `json:"image"`
+	Version int32 `json:"vresion"`
 }
 
 type CharonStatus struct {
 	Image string `json:"image"`
+	Version int32 `json:"vresion"`
+	IfVersionChanged bool `json:"ifversionchanged"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -78,6 +78,7 @@ func (r *ReconcileCharon) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
+	// If pod doesn't exist, create one
 	found := &corev1.Pod{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
@@ -92,6 +93,21 @@ func (r *ReconcileCharon) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
+	// If pod exists, check for updates
+	if instance.Status.IfVersionChanges {
+		instance.Status.IfVersionChanged = false
+
+		// ... 
+
+		err = r.client.Status().Update(context.Background(), instance)
+		if err != nil {
+			req.Logger.Error(err, "Failed to update pod status ", "Pod.Namespace", pod.Namespace, " Pod.Name")
+			return reconcile.Result{}, err
+		}
+		return return reconcile.Result{Requeue: true}, nil
+	}
+
+	// If pod exists and doesn't need update, do nothing
 	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	return reconcile.Result{}, nil
 }
