@@ -1,2 +1,5 @@
 backup*
 thanos/
+k8s-deploy.sh
+registry.sh
+reset.sh
