@@ -1,0 +1,7 @@
+apiVersion: deployer.charon.cr/v1alpha1
+kind: Deployer
+metadata:
+  name: example-deployer
+spec:
+  # Add fields here
+  size: 3

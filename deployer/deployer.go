@@ -1,4 +1,4 @@
-package charon
+package deployer
 import (
         "github.com/gin-gonic/gin"
         "github.com/docker/distribution/notifications"
@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 )
 
-func parseEvents(c *gin.Context) {
+func rollout(c *gin.Context) {
 	body := c.Request.Body
 	decoder := json.NewDecoder(body)
 
@@ -25,9 +25,14 @@ func parseEvents(c *gin.Context) {
 	c.JSON(200, 0)
 }
 
+func rollout(c *gin.Context) {
+	c.JSON(200, 0)
+}
+
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
-	r.POST("/event", parseEvents)
+	r.POST("/rollout", rollout)
+	r.POST("/rollback", rollback)
 	r.Run(":31337")
 }

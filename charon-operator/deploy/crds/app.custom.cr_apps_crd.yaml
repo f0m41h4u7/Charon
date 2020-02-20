@@ -1,20 +1,20 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: charons.charon.charon.cr
+  name: apps.app.custom.cr
 spec:
-  group: charon.charon.cr
+  group: app.custom.cr
   names:
-    kind: Charon
-    listKind: CharonList
-    plural: charons
-    singular: charon
+    kind: App
+    listKind: AppList
+    plural: apps
+    singular: app
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: Charon is the Schema for the charons API
+      description: App is the Schema for the apps API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -29,10 +29,10 @@ spec:
         metadata:
           type: object
         spec:
-          description: CharonSpec defines the desired state of Charon
+          description: AppSpec defines the desired state of App
           type: object
         status:
-          description: CharonStatus defines the observed state of Charon
+          description: AppStatus defines the observed state of App
           type: object
       type: object
   version: v1alpha1

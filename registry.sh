@@ -12,6 +12,12 @@ running="$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || t
 if [ "${running}" != 'true' ]; then
   docker run \
     -d --restart=always -p "${reg_port}:5000" --name "${reg_name}" \
+    -e REGISTRY_NOTIFICATIONS_ENDPOINTS="
+    - name: charon
+      url: http://127.0.0.1:31337/event
+      timeout: 5s
+      threshold: 5
+      backoff: 30s" \
     registry:2
 fi
 reg_ip="$(docker inspect -f '{{.NetworkSettings.IPAddress}}' "${reg_name}")"

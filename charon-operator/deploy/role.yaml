@@ -67,7 +67,19 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - charon.charon.cr
+  - app.custom.cr
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - deployer.charon.cr
   resources:
   - '*'
   verbs:
