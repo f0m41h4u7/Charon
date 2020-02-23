@@ -150,7 +150,7 @@ func (r *ReconcileDeployer) Reconcile(request reconcile.Request) (reconcile.Resu
 
 func newSvcForCr(cr *deployerv1alpha1.Deployer) *corev1.Service {
 	labels := map[string]string{
-                "deployer": cr.Name,
+                "name": "deployer",
         }
 	var tport intstr.IntOrString
 	tport.IntVal = 31337
@@ -163,7 +163,7 @@ func newSvcForCr(cr *deployerv1alpha1.Deployer) *corev1.Service {
 			Ports: []corev1.ServicePort{
 				{
 					Protocol: "TCP",
-					Port: 80,
+					Port: 31337,
 					TargetPort: tport,
 				},
 			},
@@ -173,7 +173,7 @@ func newSvcForCr(cr *deployerv1alpha1.Deployer) *corev1.Service {
 
 func newPodForCR(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 	labels := map[string]string{
-		"deployer": cr.Name,
+		"name": "deployer",
 	}
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

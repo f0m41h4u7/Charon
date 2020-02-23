@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build --tag deployer .
+docker build --tag charon-registry:5000/deployer .

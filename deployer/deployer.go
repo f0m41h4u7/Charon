@@ -31,8 +31,10 @@ func rollout(c *gin.Context) {
 	for index, event := range envelope.Events {
 		fmt.Printf("Processing event %d of %d\n", index+1, len(envelope.Events))
 		if event.Action == notifications.EventActionPush {
-			img := event.Target.Repository + ":" + event.Target.Tag
-			fmt.Println(img)
+			if event.Target.Tag != nil {
+				img := event.Target.Repository + ":" + event.Target.Tag
+				fmt.Println(img)
+			}
 //			sendPatch(img)
 		}
 	}
@@ -51,6 +53,6 @@ func main() {
 //	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.POST("/rollout", rollout)
-	r.POST("/rollback", rollback)
+//	r.POST("/rollback", rollback)
 	r.Run(":31337")
 }
