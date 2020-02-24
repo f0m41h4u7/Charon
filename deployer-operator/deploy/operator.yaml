@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployer-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: deployer-operator
+  template:
+    metadata:
+      labels:
+        name: deployer-operator
+    spec:
+      serviceAccountName: deployer-operator
+      containers:
+        - name: deployer-operator
+          image: charon-registry:5000/deployer-operator
+          command:
+          - deployer-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "deployer-operator"

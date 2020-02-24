@@ -1,11 +1,11 @@
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 
-ENV OPERATOR=/usr/local/bin/charon-operator \
+ENV OPERATOR=/usr/local/bin/deployer-operator \
     USER_UID=1001 \
-    USER_NAME=charon-operator
+    USER_NAME=deployer-operator
 
 # install operator binary
-COPY build/_output/bin/charon-operator ${OPERATOR}
+COPY build/_output/bin/deployer-operator ${OPERATOR}
 
 COPY build/bin /usr/local/bin
 RUN  /usr/local/bin/user_setup

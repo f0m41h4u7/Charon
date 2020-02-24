@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"charon-operator/pkg/apis/app/v1alpha1"
+	"deployer-operator/pkg/apis/deployer/v1alpha1"
 )
 
 func init() {

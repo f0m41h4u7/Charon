@@ -3,7 +3,7 @@ package deployer
 import (
 	"context"
 
-	deployerv1alpha1 "charon-operator/pkg/apis/deployer/v1alpha1"
+	deployerv1alpha1 "deployer-operator/pkg/apis/deployer/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -58,15 +58,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource Services and requeue the owner Deployer
-        err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
-                IsController: true,
-                OwnerType:    &deployerv1alpha1.Deployer{},
-        })
-        if err != nil {
-                return err
-        }
-
 	return nil
 }
 
@@ -107,13 +98,10 @@ func (r *ReconcileDeployer) Reconcile(request reconcile.Request) (reconcile.Resu
 	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
-	if err := controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
-                return reconcile.Result{}, err
-        }
 
 	// Check if this Pod already exists
-	foundPod := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, foundPod)
+	found := &corev1.Pod{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
 		err = r.client.Create(context.TODO(), pod)
@@ -121,7 +109,7 @@ func (r *ReconcileDeployer) Reconcile(request reconcile.Request) (reconcile.Resu
 			return reconcile.Result{}, err
 		}
 
-		// Pod created successfully
+		// Pod created successfully - don't requeue
 		return reconcile.Result{}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
@@ -144,7 +132,7 @@ func (r *ReconcileDeployer) Reconcile(request reconcile.Request) (reconcile.Resu
         }
 
 	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", foundPod.Namespace, "Pod.Name", foundPod.Name)
+	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	return reconcile.Result{}, nil
 }
 
@@ -156,9 +144,10 @@ func newSvcForCr(cr *deployerv1alpha1.Deployer) *corev1.Service {
 	tport.IntVal = 31337
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-                        Name: cr.Name + "-svc",
+                        Name: cr.Name,
 		},
 		Spec: corev1.ServiceSpec{
+			Type: "ClusterIP",
 			Selector: labels,
 			Ports: []corev1.ServicePort{
 				{

@@ -1,4 +1,4 @@
-module charon-operator
+module deployer-operator
 
 go 1.13
 

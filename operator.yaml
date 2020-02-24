@@ -15,7 +15,7 @@ spec:
       serviceAccountName: charon-operator
       containers:
         - name: charon-operator
-          image: localhost:30001/charon-operator
+          image: charon-registry:5000/charon-operator
           command:
           - charon-operator
           imagePullPolicy: Always
