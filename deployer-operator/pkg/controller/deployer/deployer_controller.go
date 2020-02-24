@@ -166,14 +166,14 @@ func newPodForCR(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 	}
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
+			Name:      cr.Name,
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:    "deployer",
+					Name:    cr.Name,
 					Image:   cr.Spec.Image,
 				},
 			},

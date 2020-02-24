@@ -1,6 +1,6 @@
 apiVersion: deployer.charon.cr/v1alpha1
 kind: Deployer
 metadata:
-  name: charon-deployer
+  name: deployer
 spec:
   image: charon-registry:5000/deployer
