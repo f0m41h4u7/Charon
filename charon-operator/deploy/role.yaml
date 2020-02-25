@@ -78,3 +78,15 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - app.custom.cr
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

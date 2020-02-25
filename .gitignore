@@ -1,4 +1,4 @@
 backup*
 thanos/
 *.json
-*.sh
+reset.sh
