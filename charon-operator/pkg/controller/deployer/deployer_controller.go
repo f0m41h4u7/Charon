@@ -3,7 +3,7 @@ package deployer
 import (
 	"context"
 
-	deployerv1alpha1 "deployer-operator/pkg/apis/deployer/v1alpha1"
+	deployerv1alpha1 "charon-operator/pkg/apis/deployer/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -18,8 +18,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var log = logf.Log.WithName("controller_deployer")
@@ -66,6 +64,8 @@ var _ reconcile.Reconciler = &ReconcileDeployer{}
 
 // ReconcileDeployer reconciles a Deployer object
 type ReconcileDeployer struct {
+	// This client, initialized using mgr.Client() above, is a split client
+	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
 }
@@ -91,8 +91,6 @@ func (r *ReconcileDeployer) Reconcile(request reconcile.Request) (reconcile.Resu
 
 	// Define a new Pod object
 	pod := newPodForCR(instance)
-	// Define a new Service
-	svc := newSvcForCr(instance)
 
 	// Set Deployer instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
@@ -115,54 +113,14 @@ func (r *ReconcileDeployer) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
-	// Check if this Service already exists
-	foundSvc := &corev1.Service{}
-        err = r.client.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, foundSvc)
-        if err != nil && errors.IsNotFound(err) {
-                reqLogger.Info("Creating a new Service", "Service.Namespace", svc.Namespace, "Service.Name", svc.Name)
-                err = r.client.Create(context.TODO(), pod)
-                if err != nil {
-                        return reconcile.Result{}, err
-                }
-
-                // Service created successfully
-                return reconcile.Result{}, nil
-        } else if err != nil {
-                return reconcile.Result{}, err
-        }
-
 	// Pod already exists - don't requeue
 	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	return reconcile.Result{}, nil
 }
 
-func newSvcForCr(cr *deployerv1alpha1.Deployer) *corev1.Service {
-	labels := map[string]string{
-                "name": "deployer",
-        }
-	var tport intstr.IntOrString
-	tport.IntVal = 31337
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-                        Name: cr.Name,
-		},
-		Spec: corev1.ServiceSpec{
-			Type: "ClusterIP",
-			Selector: labels,
-			Ports: []corev1.ServicePort{
-				{
-					Protocol: "TCP",
-					Port: 31337,
-					TargetPort: tport,
-				},
-			},
-		},
-	}
-}
-
 func newPodForCR(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 	labels := map[string]string{
-		"name": "deployer",
+		"name": cr.Name,
 	}
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -175,6 +133,7 @@ func newPodForCR(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 				{
 					Name:    cr.Name,
 					Image:   cr.Spec.Image,
+					ImagePullPolicy: "IfNotPresent",
 				},
 			},
 		},

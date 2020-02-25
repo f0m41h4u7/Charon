@@ -13,9 +13,9 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
-	"deployer-operator/pkg/apis"
-	"deployer-operator/pkg/controller"
-	"deployer-operator/version"
+	"charon-operator/pkg/apis"
+	"charon-operator/pkg/controller"
+	"charon-operator/version"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
@@ -86,7 +86,7 @@ func main() {
 
 	ctx := context.TODO()
 	// Become the leader before proceeding
-	err = leader.Become(ctx, "deployer-operator-lock")
+	err = leader.Become(ctx, "charon-operator-lock")
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)

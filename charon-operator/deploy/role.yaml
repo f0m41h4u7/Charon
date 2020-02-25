@@ -2,7 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   creationTimestamp: null
-  name: deployer-operator
+  name: charon-operator
 rules:
 - apiGroups:
   - ""
@@ -48,7 +48,7 @@ rules:
 - apiGroups:
   - apps
   resourceNames:
-  - deployer-operator
+  - charon-operator
   resources:
   - deployments/finalizers
   verbs:

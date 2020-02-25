@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"deployer-operator/pkg/controller/deployer"
+	"charon-operator/pkg/controller/deployer"
 )
 
 func init() {
