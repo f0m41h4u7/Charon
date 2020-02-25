@@ -5,11 +5,11 @@ import (
 )
 
 type AppSpec struct {
-	Image string `json:"string"`
+	Image string `json:"image"`
 }
 
 type AppStatus struct {
-	Image string `json:"string"`
+	Image string `json:"image"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

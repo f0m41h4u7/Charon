@@ -18,7 +18,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -57,15 +56,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if err != nil {
 		return err
 	}
-
-	// Watch for changes to secondary resource Services and requeue the owner Deployer
-        err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
-                IsController: true,
-                OwnerType:    &deployerv1alpha1.Deployer{},
-        })
-        if err != nil {
-                return err
-        }
 
 	return nil
 }
@@ -107,13 +97,11 @@ func (r *ReconcileDeployer) Reconcile(request reconcile.Request) (reconcile.Resu
 	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
-	if err := controllerutil.SetControllerReference(instance, svc, r.scheme); err != nil {
-                return reconcile.Result{}, err
-        }
 
 	// Check if this Pod already exists
-	foundPod := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, foundPod)
+	found := &corev1.Pod{}
+	foundSvc := &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
 		err = r.client.Create(context.TODO(), pod)
@@ -121,18 +109,24 @@ func (r *ReconcileDeployer) Reconcile(request reconcile.Request) (reconcile.Resu
 			return reconcile.Result{}, err
 		}
 
-		// Pod created successfully
+		errSvc := r.client.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, foundSvc)
+		if errSvc != nil && errors.IsNotFound(errSvc) {
+	                reqLogger.Info("Creating a new Service", "Service.Namespace", svc.Namespace, "Service.Name", svc.Name)
+			errSvc = r.client.Create(context.TODO(), svc)
+			if errSvc != nil {
+				return reconcile.Result{}, errSvc
+			}
+		}
+		// Pod created successfully - don't requeue
 		return reconcile.Result{}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Check if this Service already exists
-	foundSvc := &corev1.Service{}
         err = r.client.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, foundSvc)
         if err != nil && errors.IsNotFound(err) {
                 reqLogger.Info("Creating a new Service", "Service.Namespace", svc.Namespace, "Service.Name", svc.Name)
-                err = r.client.Create(context.TODO(), pod)
+                err = r.client.Create(context.TODO(), svc)
                 if err != nil {
                         return reconcile.Result{}, err
                 }
@@ -144,22 +138,24 @@ func (r *ReconcileDeployer) Reconcile(request reconcile.Request) (reconcile.Resu
         }
 
 	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", foundPod.Namespace, "Pod.Name", foundPod.Name)
+	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	return reconcile.Result{}, nil
 }
 
 func newSvcForCr(cr *deployerv1alpha1.Deployer) *corev1.Service {
 	labels := map[string]string{
-                "name": "deployer",
+                "name": cr.Name,
         }
 	var tport intstr.IntOrString
 	tport.IntVal = 31337
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-                        Name: cr.Name + "-svc",
+                        Name: cr.Name,
+			Namespace: cr.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: labels,
+			Type: "ClusterIP",
 			Ports: []corev1.ServicePort{
 				{
 					Protocol: "TCP",
@@ -173,18 +169,18 @@ func newSvcForCr(cr *deployerv1alpha1.Deployer) *corev1.Service {
 
 func newPodForCR(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 	labels := map[string]string{
-		"name": "deployer",
+		"name": cr.Name,
 	}
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
+			Name:      cr.Name,
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:    "deployer",
+					Name:    cr.Name,
 					Image:   cr.Spec.Image,
 				},
 			},

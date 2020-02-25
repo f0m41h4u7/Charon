@@ -31,7 +31,7 @@ func rollout(c *gin.Context) {
 	for index, event := range envelope.Events {
 		fmt.Printf("Processing event %d of %d\n", index+1, len(envelope.Events))
 		if event.Action == notifications.EventActionPush {
-			if event.Target.Tag != nil {
+			if event.Target.Tag != "" {
 				img := event.Target.Repository + ":" + event.Target.Tag
 				fmt.Println(img)
 			}
