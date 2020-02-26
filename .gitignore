@@ -2,5 +2,5 @@ backup*
 *.json
 *.sh
 registry*
-deployer/run.sh
+deployer/*.sh
 reset.sh

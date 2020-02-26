@@ -1,10 +1,3 @@
-/*****************************************************************************************
-*
-* The Deployer monitors notifications from Charon-registry and Charon-AI.
-* Rollout/rollback updates are deployed by sending Patch requests to Kubernetes Apiserver.
-*
-******************************************************************************************/
-
 package main
 import (
         "github.com/gin-gonic/gin"
@@ -15,27 +8,26 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"os"
 	"context"
+	"k8s.io/client-go/rest"
 )
 
 // Send Patch request
 func sendPatch(name string, img string) {
-	config := filepath.Join(
-		os.Getenv("HOME"), ".kube", "config",
-	)
-	// creates the in-cluster config
-	//config, err := rest.InClusterConfig()
-	//if err != nil {
-	//	panic(err.Error())
-	//}
-	// creates the clientset
+	// Create the in-cluster config
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// Create the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
 	}
 	podClient := clientset.CoreV1().Pods(corev1.NamespaceDefault)
 
+	// Try to update
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		result, getErr := podClient.Get(context.TODO(), name, metav1.GetOptions{})
 		if getErr != nil {
@@ -49,10 +41,10 @@ func sendPatch(name string, img string) {
 	if retryErr != nil {
 		panic(fmt.Errorf("Update failed: %v", retryErr))
 	}
-	fmt.Println("Updated deployment...")
+	fmt.Println("Updated pod...")
 }
 
-// Handle Charon-registry notifications
+// Handle Registry notifications
 func rollout(c *gin.Context) {
 	body := c.Request.Body
 	decoder := json.NewDecoder(body)
@@ -72,14 +64,14 @@ func rollout(c *gin.Context) {
 			if (event.Target.Tag != "") && (event.Target.Repository != "charon-operator") && (event.Target.Repository != "deployer") {
 				img := event.Target.Repository + ":" + event.Target.Tag
 				fmt.Println(img)
-				sendPatch(img)
+				sendPatch(event.Target.Repository, img)
 			}
 		}
 	}
 	c.JSON(200, 0)
 }
 
-// Handle Charon-AI notifications
+// Handle rollback notifications
 func rollback(c *gin.Context) {
 	//body := c.Request.Body
 	//decoder := json.NewDecoder(body)
@@ -92,10 +84,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	// Listen Charon-registry notifications
 	r.POST("/rollout", rollout)
-
-	// Listen Charon-AI notifications
 	r.POST("/rollback", rollback)
 	r.Run(":31337")
 }

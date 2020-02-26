@@ -182,6 +182,8 @@ func newPodForCR(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 				{
 					Name:    cr.Name,
 					Image:   cr.Spec.Image,
+					ServiceAccountName: cr.Spec.ServiceAccountName,
+					AutomountServiceAccountToken: "false",
 				},
 			},
 		},

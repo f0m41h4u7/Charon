@@ -4,3 +4,4 @@ metadata:
   name: charon-deployer
 spec:
   image: charon-registry:5000/deployer
+  serviceAccountName: charon-deployer-serv-acc
