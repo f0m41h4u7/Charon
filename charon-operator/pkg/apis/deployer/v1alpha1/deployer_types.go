@@ -5,11 +5,11 @@ import (
 )
 
 type DeployerSpec struct {
-	Image string `json:"string"`
+	Image string `json:"image"`
 }
 
 type DeployerStatus struct {
-	Image string `json:"string"`
+	Image string `json:"image"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
