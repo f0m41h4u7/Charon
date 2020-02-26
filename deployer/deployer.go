@@ -11,57 +11,45 @@ import (
         "github.com/docker/distribution/notifications"
         "fmt"
 	"encoding/json"
-	"net/http"
-	"bytes"
+	"k8s.io/client-go/util/retry"
+	"k8s.io/client-go/pkg/api/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"os"
+	"context"
 )
 
-type metadataStruct struct {
-	name string
-}
-
-type specStruct struct {
-	image string
-}
-
-// Structure of deployer cr.yaml
-type appConfig struct {
-	apiVersion string
-	kind string
-	metadata metadataStruct
-	spec specStruct
-}
-
-// Send Patch request to Apiserver
-func sendPatch(img string) {
-	client := &http.Client{}
-	fmt.Println("Sending patch...")
-
-	// Custom Resource config
-	config := appConfig {
-		apiVersion: "app.custom.cr/v1alpha1",
-		kind: "App",
-		metadata: metadataStruct {
-			name: img + "-pod",
-		},
-		spec: specStruct {
-			image: img,
-		},
-	}
-
-	var patch []byte
-	patch, err := json.Marshal(config)
+// Send Patch request
+func sendPatch(name string, img string) {
+	config := filepath.Join(
+		os.Getenv("HOME"), ".kube", "config",
+	)
+	// creates the in-cluster config
+	//config, err := rest.InClusterConfig()
+	//if err != nil {
+	//	panic(err.Error())
+	//}
+	// creates the clientset
+	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		fmt.Println(err)
+		panic(err.Error())
 	}
+	podClient := clientset.CoreV1().Pods(corev1.NamespaceDefault)
 
-	addr := "http://10.96.0.1"
-	req, err := http.NewRequest("PATCH", addr, bytes.NewReader(patch))
-	req.Header.Add("Content-Type", "application/json-patch+json")
-        resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("Error sending patch request: ", err)
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		result, getErr := podClient.Get(context.TODO(), name, metav1.GetOptions{})
+		if getErr != nil {
+			panic(fmt.Errorf("Failed to get latest version of Pod: %v", getErr))
+		}
+
+		result.Spec.Template.Spec.Containers[0].Image = img
+		_, updateErr := podClient.Update(context.TODO(), result, metav1.UpdateOptions{})
+		return updateErr
+	})
+	if retryErr != nil {
+		panic(fmt.Errorf("Update failed: %v", retryErr))
 	}
-	fmt.Println(resp)
+	fmt.Println("Updated deployment...")
 }
 
 // Handle Charon-registry notifications
