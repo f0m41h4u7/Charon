@@ -1,4 +1,9 @@
 backup*
-thanos/
 *.json
+<<<<<<< HEAD
+*.sh
+registry*
+deployer/run.sh
+=======
 reset.sh
+>>>>>>> 04a3d46db3d94e07d0bac56e122268e8f75bac2b
