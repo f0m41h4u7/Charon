@@ -1,5 +1,5 @@
 backup*
-thanos/
 *.json
 *.sh
 registry*
+deployer/run.sh
