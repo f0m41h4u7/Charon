@@ -80,7 +80,7 @@ func rollback(c *gin.Context) {
 }
 
 func main() {
-	gin.SetMode(gin.ReleaseMode)
+//	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
 	r.POST("/rollout", rollout)
