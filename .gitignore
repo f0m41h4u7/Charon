@@ -4,3 +4,5 @@ backup*
 registry*
 deployer/*.sh
 reset.sh
+monitoring/*.sh
+deployer/pkg/

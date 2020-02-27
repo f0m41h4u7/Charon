@@ -5,11 +5,10 @@ import (
         "fmt"
 	"encoding/json"
 	"k8s.io/client-go/util/retry"
-	"k8s.io/client-go/pkg/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"context"
 	"k8s.io/client-go/rest"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // Send Patch request
@@ -29,13 +28,13 @@ func sendPatch(name string, img string) {
 
 	// Try to update
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		result, getErr := podClient.Get(context.TODO(), name, metav1.GetOptions{})
+		result, getErr := podClient.Get(name, metav1.GetOptions{})
 		if getErr != nil {
 			panic(fmt.Errorf("Failed to get latest version of Pod: %v", getErr))
 		}
 
-		result.Spec.Template.Spec.Containers[0].Image = img
-		_, updateErr := podClient.Update(context.TODO(), result, metav1.UpdateOptions{})
+		result.Spec.Containers[0].Image = img
+		_, updateErr := podClient.Update(result)
 		return updateErr
 	})
 	if retryErr != nil {

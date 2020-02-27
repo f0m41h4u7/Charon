@@ -5,6 +5,9 @@ ENV		GOPATH /go/src
 
 RUN     	apk update && apk upgrade && apk add vim bash
 
-COPY		deployer.go $GOPATH
-WORKDIR		$GOPATH
+COPY		deployer.go /home
+COPY		mv go.mod /home
+RUN		go mod tidy
+
+WORKDIR		/home
 ENTRYPOINT	["go", "run", "deployer.go"]

@@ -20,7 +20,8 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: charon-deployer-serv-acc
-  apiGroup: rbac.authorization.k8s.io
+  apiGroup: ""
+  namespace: default
 roleRef:
   kind: ClusterRole
   name: deployer-role

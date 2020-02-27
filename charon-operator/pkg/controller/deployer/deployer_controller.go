@@ -171,6 +171,7 @@ func newPodForCR(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 	labels := map[string]string{
 		"name": cr.Name,
 	}
+	t := true
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.Name,
@@ -178,12 +179,12 @@ func newPodForCR(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{
+			ServiceAccountName: cr.Spec.ServiceAccountName,
+			AutomountServiceAccountToken: &t,
 			Containers: []corev1.Container{
 				{
 					Name:    cr.Name,
 					Image:   cr.Spec.Image,
-					ServiceAccountName: cr.Spec.ServiceAccountName,
-					AutomountServiceAccountToken: "false",
 				},
 			},
 		},

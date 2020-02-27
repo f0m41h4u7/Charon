@@ -3,7 +3,7 @@ module charon-operator
 go 1.13
 
 require (
-	github.com/operator-framework/operator-sdk v0.15.1-0.20200224212241-e8424d5f3def
+	github.com/operator-framework/operator-sdk v0.15.1-0.20200226174452-b32bf5d2eaa9
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
