@@ -3,11 +3,12 @@ module charon-operator
 go 1.13
 
 require (
-	github.com/operator-framework/operator-sdk v0.15.1-0.20200227095524-1d8efcda7b99
+	github.com/operator-framework/operator-sdk v0.15.1-0.20200227224723-453e43e06c89
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v12.0.0+incompatible
+	k8s.io/kubernetes v1.16.2
 	sigs.k8s.io/controller-runtime v0.4.0
 )
 

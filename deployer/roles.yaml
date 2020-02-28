@@ -25,3 +25,11 @@ roleRef:
   kind: Role
   name: deployer-role
   apiGroup: ""
+  #---
+  #apiVersion: v1
+  #kind: Secret
+  #metadata:
+  #name: deployer-secret
+  #annotations:
+  # kubernetes.io/service-account.name: charon-deployer-serv-acc
+  #type: kubernetes.io/service-account-token

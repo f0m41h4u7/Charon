@@ -183,8 +183,8 @@ func newPodForCR(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 			AutomountServiceAccountToken: &t,
 			Containers: []corev1.Container{
 				{
-					Name:    cr.Name,
-					Image:   cr.Spec.Image,
+					Name: cr.Name,
+					Image: cr.Spec.Image,
 				},
 			},
 		},
