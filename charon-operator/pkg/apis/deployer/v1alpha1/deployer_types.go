@@ -6,12 +6,10 @@ import (
 
 type DeployerSpec struct {
 	Image string `json:"image"`
-	ServiceAccountName string `json:"serviceaccountname"`
 }
 
 type DeployerStatus struct {
 	Image string `json:"image"`
-	ServiceAccountName string `json:"serviceaccountname"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -1,4 +1,12 @@
 apiVersion: v1
+kind: Secret
+metadata:
+  name: deployer-secret
+annotations:
+  kubernetes.io/service-account.name: charon-deployer-serv-acc
+type: kubernetes.io/service-account-token
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: charon-deployer-serv-acc
@@ -12,6 +20,8 @@ rules:
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get", "watch", "list", "update", "create", "patch"]
+secrets:
+- name: deployer-secret
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -25,11 +35,3 @@ roleRef:
   kind: Role
   name: deployer-role
   apiGroup: ""
-  #---
-  #apiVersion: v1
-  #kind: Secret
-  #metadata:
-  #name: deployer-secret
-  #annotations:
-  # kubernetes.io/service-account.name: charon-deployer-serv-acc
-  #type: kubernetes.io/service-account-token
