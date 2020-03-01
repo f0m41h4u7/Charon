@@ -9,10 +9,31 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	corev1 "k8s.io/api/core/v1"
+	"os"
+	"net/http"
+	"io/ioutil"
+	"crypto/tls"
+	"crypto/x509"
+	"bytes"
 )
+type AppMetadata struct {
+	name            string
+        namespace       string
+}
+type AppSpec struct {
+	image   string
+}
+type App struct {
+	apiVersion      string
+        kind            string
+        metadata        interface{}
+        spec            interface{}
+}
 
-// Send Patch request
-func sendPatch(name string, img string) {
+// Send updates
+func sendUpdate(name string, img string) {
+	fmt.Println("Sending update to ", img)
+
 	// Create the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -28,19 +49,76 @@ func sendPatch(name string, img string) {
 
 	// Try to update
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		result, getErr := podClient.Get(name, metav1.GetOptions{})
+		updApp, getErr := podClient.Get(name, metav1.GetOptions{})
 		if getErr != nil {
-			panic(fmt.Errorf("Failed to get latest version of Pod: %v", getErr))
-		}
+			fmt.Printf("Failed to get latest version of Pod: %v. Creating new Pod.", getErr)
 
-		result.Spec.Containers[0].Image = img
-		_, updateErr := podClient.Update(result)
+			// If doesn't exist, create new
+
+			certPath := "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+			tokenPath := "/var/run/secrets/kubernetes.io/serviceaccount/token"
+			addr := "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/app.custom.cr/v1alpha1/namespaces/default/apps"
+			read, err := ioutil.ReadFile(tokenPath)
+			if err != nil {
+				fmt.Println("Cannot read token", err)
+			}
+			token := "Bearer " + string(read)
+
+			caCert, err := ioutil.ReadFile(certPath)
+			if err != nil {
+                                fmt.Println("Cannot get cert")
+                        }
+			caCertPool := x509.NewCertPool()
+			caCertPool.AppendCertsFromPEM(caCert)
+			client := &http.Client{
+				Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{
+						RootCAs: caCertPool,
+					},
+				},
+			}
+
+			newApp := App {
+				apiVersion:	"app.custom.cr/v1alpha1",
+				kind:		"App",
+				metadata: AppMetadata {
+					name:	name,
+				},
+				spec: AppSpec {
+					image:	img,
+				},
+			}
+			reqBody, jsonErr := json.Marshal(newApp)
+			if jsonErr != nil {
+				fmt.Println(jsonErr)
+			}
+			fmt.Println("Request body: ", reqBody)
+
+			// Send request to create App
+			req, err := http.NewRequest("POST", addr, bytes.NewReader(reqBody))
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Add("Authorization", token)
+			resp, err := client.Do(req)
+			if err != nil {
+				fmt.Println(err)
+				return err
+			}
+
+			defer resp.Body.Close()
+			// Print response
+			fmt.Println(resp.Body)
+			return nil
+		}
+		// If exists, send update
+		updApp.Spec.Containers[0].Image = img
+		_, updateErr := podClient.Update(updApp)
 		return updateErr
 	})
 	if retryErr != nil {
 		panic(fmt.Errorf("Update failed: %v", retryErr))
+	} else {
+		fmt.Println("Successfully updated pod.")
 	}
-	fmt.Println("Updated pod...")
 }
 
 // Handle Registry notifications
@@ -63,7 +141,7 @@ func rollout(c *gin.Context) {
 			if (event.Target.Tag != "") && (event.Target.Repository != "charon-operator") && (event.Target.Repository != "deployer") {
 				img := event.Target.Repository + ":" + event.Target.Tag
 				fmt.Println(img)
-				sendPatch(event.Target.Repository, img)
+				sendUpdate(event.Target.Repository, img)
 			}
 		}
 	}
@@ -75,7 +153,7 @@ func rollback(c *gin.Context) {
 	//body := c.Request.Body
 	//decoder := json.NewDecoder(body)
 
-	//sendPatch(img)
+	//sendUpdate(name, img)
 	c.JSON(200, 0)
 }
 

@@ -235,6 +235,16 @@ func createRole (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *rbac.Role
 				Resources:	[]string{"apps", "pods"},
 				Verbs:		[]string{"get", "create", "update", "delete", "patch", "list"},
 			},
+			{
+				APIGroups:      []string{"apps"},
+                                Resources:      []string{"*"},
+                                Verbs:          []string{"get", "create", "update", "delete", "patch", "list"},
+			},
+			{
+				APIGroups:      []string{""},
+                                Resources:      []string{"*"},
+                                Verbs:          []string{"get", "create", "update", "delete", "patch", "list"},
+			},
 		},
         }
 
