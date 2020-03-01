@@ -17,22 +17,22 @@ import (
 	"bytes"
 )
 type AppMetadata struct {
-	name            string
-        namespace       string
+	Name	string	`json:"name"`
 }
 type AppSpec struct {
-	image   string
+	Image   string	`json:"image"`
 }
 type App struct {
-	apiVersion      string
-        kind            string
-        metadata        interface{}
-        spec            interface{}
+	ApiVersion      string		`json:"apiVersion"`
+        Kind            string		`json:"kind"`
+        Metadata        interface{}	`json:"metadata"`
+        Spec            interface{}	`json:"spec"`
 }
 
 // Send updates
 func sendUpdate(name string, img string) {
 	fmt.Println("Sending update to ", img)
+	img = "charon-registry:5000/" + img
 
 	// Create the in-cluster config
 	config, err := rest.InClusterConfig()
@@ -51,10 +51,9 @@ func sendUpdate(name string, img string) {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		updApp, getErr := podClient.Get(name, metav1.GetOptions{})
 		if getErr != nil {
-			fmt.Printf("Failed to get latest version of Pod: %v. Creating new Pod.", getErr)
+			fmt.Printf("Failed to get latest version of Pod: %v. Creating new Pod. \n", getErr)
 
-			// If doesn't exist, create new
-
+			// Get authorization token and certificate
 			certPath := "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 			tokenPath := "/var/run/secrets/kubernetes.io/serviceaccount/token"
 			addr := "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/app.custom.cr/v1alpha1/namespaces/default/apps"
@@ -79,20 +78,20 @@ func sendUpdate(name string, img string) {
 			}
 
 			newApp := App {
-				apiVersion:	"app.custom.cr/v1alpha1",
-				kind:		"App",
-				metadata: AppMetadata {
-					name:	name,
+				ApiVersion:	"app.custom.cr/v1alpha1",
+				Kind:		"App",
+				Metadata: AppMetadata {
+					Name:	name,
 				},
-				spec: AppSpec {
-					image:	img,
+				Spec: AppSpec {
+					Image:	img,
 				},
 			}
 			reqBody, jsonErr := json.Marshal(newApp)
 			if jsonErr != nil {
 				fmt.Println(jsonErr)
 			}
-			fmt.Println("Request body: ", reqBody)
+			fmt.Printf("Request body: %s\n", reqBody)
 
 			// Send request to create App
 			req, err := http.NewRequest("POST", addr, bytes.NewReader(reqBody))
