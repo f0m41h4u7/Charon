@@ -78,7 +78,7 @@ func sendUpdate(name string, img string) {
 
 	// Try to update
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		_, getErr := podClient.Get(name, metav1.GetOptions{})
+		updApp, getErr := podClient.Get(name, metav1.GetOptions{})
 		if getErr != nil {
 			fmt.Printf("Failed to get latest version of Pod: %v. Creating new Pod. \n", getErr)
 
@@ -113,7 +113,7 @@ func sendUpdate(name string, img string) {
 			return nil
 		}
 
-		// If exists, send patch
+		// If exists, send patch to app cr
 		newApp := Patch {
 			Spec: AppSpec {
 				Image: img,
@@ -134,8 +134,11 @@ func sendUpdate(name string, img string) {
                 }
 
                 defer resp.Body.Close()
-		fmt.Println(bodyString)
-                return nil
+
+		// Update pod
+		updApp.Spec.Containers[0].Image = img
+		_, updateErr := podClient.Update(updApp)
+		return updateErr
 	})
 	if retryErr != nil {
 		panic(fmt.Errorf("Update failed: %v", retryErr))
