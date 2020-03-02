@@ -22,7 +22,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	rbac "k8s.io/api/rbac/v1beta1"
-	"fmt"
 )
 
 var log = logf.Log.WithName("controller_deployer")
@@ -139,8 +138,6 @@ func (r *ReconcileDeployer) Reconcile(request reconcile.Request) (reconcile.Resu
 }
 
 func handleRBAC (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) error{
-	fmt.Println("Handle RBAC")
-
 	role := createRole(cr, r)
         rb := createRB(cr, r)
         sa := createSA(cr, r)
@@ -175,8 +172,6 @@ func handleRBAC (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) error{
 }
 
 func handleSvc (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) error {
-	fmt.Println("Handle Svc")
-
 	svc := createService(cr)
 
 	found := &corev1.Service{}
@@ -191,8 +186,6 @@ func handleSvc (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) error {
 }
 
 func createService (cr *deployerv1alpha1.Deployer) *corev1.Service {
-	fmt.Println("Creating svc...")
-
 	labels := map[string]string{
                 "name": cr.Name,
         }
@@ -218,8 +211,6 @@ func createService (cr *deployerv1alpha1.Deployer) *corev1.Service {
 }
 
 func createRole (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *rbac.Role {
-        fmt.Println("Creating role...")
-
         role := &rbac.Role{
                 TypeMeta: metav1.TypeMeta{
                         APIVersion:     "rbac.authorization.k8s.io/v1",
@@ -253,8 +244,6 @@ func createRole (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *rbac.Role
 }
 
 func createRB (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *rbac.RoleBinding {
-        fmt.Println("Creating rb...")
-
         rb := &rbac.RoleBinding{
                 TypeMeta: metav1.TypeMeta{
                         APIVersion:     "rbac.authorization.k8s.io/v1",
@@ -283,8 +272,6 @@ func createRB (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *rbac.RoleBi
 }
 
 func createSA (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *corev1.ServiceAccount {
-	fmt.Println("Creating sa...")
-
 	sa := &corev1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion:	"v1",
@@ -301,8 +288,6 @@ func createSA (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *corev1.Serv
 }
 
 func createPod (cr *deployerv1alpha1.Deployer) *corev1.Pod {
-	fmt.Println("Creating pod...")
-
 	labels := map[string]string{
 		"name": cr.Name,
 	}

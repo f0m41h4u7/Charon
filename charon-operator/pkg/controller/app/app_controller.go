@@ -18,6 +18,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"fmt"
 )
 
 var log = logf.Log.WithName("controller_app")
@@ -80,7 +82,6 @@ func (r *ReconcileApp) Reconcile(request reconcile.Request) (reconcile.Result, e
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
@@ -89,7 +90,7 @@ func (r *ReconcileApp) Reconcile(request reconcile.Request) (reconcile.Result, e
 	}
 
 	// Define a new Pod object
-	pod := newPodForCR(instance)
+	pod := createPod(instance)
 
 	// Set App instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
@@ -98,6 +99,13 @@ func (r *ReconcileApp) Reconcile(request reconcile.Request) (reconcile.Result, e
 
 	// Check if this Pod already exists
 	found := &corev1.Pod{}
+
+	// Check Service existance
+        errSvc := handleSvc(instance, r)
+        if errSvc != nil {
+                return reconcile.Result{}, errSvc
+        }
+
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
@@ -117,7 +125,48 @@ func (r *ReconcileApp) Reconcile(request reconcile.Request) (reconcile.Result, e
 	return reconcile.Result{}, nil
 }
 
-func newPodForCR(cr *appv1alpha1.App) *corev1.Pod {
+func handleSvc (cr *appv1alpha1.App, r *ReconcileApp) error {
+	fmt.Println("handle svc")
+        svc := createService(cr)
+
+        found := &corev1.Service{}
+        err := r.client.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
+        if err != nil && errors.IsNotFound(err) {
+                err = r.client.Create(context.TODO(), svc)
+                if err != nil {
+                        return err
+                }
+        }
+        return nil
+}
+
+func createService (cr *appv1alpha1.App) *corev1.Service {
+	fmt.Println("create service")
+        labels := map[string]string{
+                "name": cr.Name,
+        }
+        var tport intstr.IntOrString
+        tport.IntVal = 1337
+        return &corev1.Service{
+                ObjectMeta: metav1.ObjectMeta{
+                        Name:           cr.Name,
+                        Namespace:      cr.Namespace,
+                },
+                Spec: corev1.ServiceSpec{
+                        Selector:       labels,
+                        Type:           "ClusterIP",
+                        Ports:          []corev1.ServicePort{
+                                {
+                                        Protocol:       "TCP",
+                                        Port:           1337,
+                                        TargetPort:     tport,
+                                },
+                        },
+                },
+        }
+}
+
+func createPod(cr *appv1alpha1.App) *corev1.Pod {
 	labels := map[string]string{
 		"name": cr.Name,
 	}
