@@ -28,11 +28,40 @@ type App struct {
         Metadata        interface{}	`json:"metadata"`
         Spec            interface{}	`json:"spec"`
 }
+type Patch struct {
+	Spec	interface{}     `json:"spec"`
+}
 
 // Send updates
 func sendUpdate(name string, img string) {
 	fmt.Println("Sending update to ", img)
 	img = "charon-registry:5000/" + img
+
+	// Get authorization token and certificate
+        certPath := "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+        tokenPath := "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        addr := "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/app.custom.cr/v1alpha1/namespaces/default/apps/" + name
+	read, err := ioutil.ReadFile(tokenPath)
+        if err != nil {
+	        fmt.Println("Cannot read token", err)
+        }
+        token := "Bearer " + string(read)
+
+        caCert, err := ioutil.ReadFile(certPath)
+        if err != nil {
+		fmt.Println("Cannot get cert")
+        }
+        caCertPool := x509.NewCertPool()
+        caCertPool.AppendCertsFromPEM(caCert)
+
+	// Create HTTP client
+        httpcli := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
+                },
+	}
 
 	// Create the in-cluster config
 	config, err := rest.InClusterConfig()
@@ -53,62 +82,60 @@ func sendUpdate(name string, img string) {
 		if getErr != nil {
 			fmt.Printf("Failed to get latest version of Pod: %v. Creating new Pod. \n", getErr)
 
-			// Get authorization token and certificate
-			certPath := "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-			tokenPath := "/var/run/secrets/kubernetes.io/serviceaccount/token"
-			addr := "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/app.custom.cr/v1alpha1/namespaces/default/apps"
-			read, err := ioutil.ReadFile(tokenPath)
-			if err != nil {
-				fmt.Println("Cannot read token", err)
-			}
-			token := "Bearer " + string(read)
+			// Create updated json config for the App
+		        newApp := App {
+		                ApiVersion:     "app.custom.cr/v1alpha1",
+		                Kind:           "App",
+		                Metadata: AppMetadata {
+		                        Name:   name,
+		                },
+		                Spec: AppSpec {
+		                        Image:  img,
+		                },
+		        }
 
-			caCert, err := ioutil.ReadFile(certPath)
-			if err != nil {
-                                fmt.Println("Cannot get cert")
-                        }
-			caCertPool := x509.NewCertPool()
-			caCertPool.AppendCertsFromPEM(caCert)
-			client := &http.Client{
-				Transport: &http.Transport{
-					TLSClientConfig: &tls.Config{
-						RootCAs: caCertPool,
-					},
-				},
-			}
-
-			newApp := App {
-				ApiVersion:	"app.custom.cr/v1alpha1",
-				Kind:		"App",
-				Metadata: AppMetadata {
-					Name:	name,
-				},
-				Spec: AppSpec {
-					Image:	img,
-				},
-			}
-			reqBody, jsonErr := json.Marshal(newApp)
-			if jsonErr != nil {
-				fmt.Println(jsonErr)
-			}
-			fmt.Printf("Request body: %s\n", reqBody)
+		        reqBody, err := json.Marshal(newApp)
+		        if err != nil {
+		                fmt.Println(err)
+		        }
 
 			// Send request to create App
 			req, err := http.NewRequest("POST", addr, bytes.NewReader(reqBody))
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Add("Authorization", token)
-			resp, err := client.Do(req)
+			resp, err := httpcli.Do(req)
 			if err != nil {
 				fmt.Println(err)
 				return err
 			}
 
 			defer resp.Body.Close()
-			// Print response
-			fmt.Println(resp.Body)
 			return nil
 		}
-		// If exists, send update
+
+		// If exists, send patch to app cr
+		newApp := Patch {
+			Spec: AppSpec {
+				Image: img,
+			},
+		}
+		reqBody, err := json.Marshal(newApp)
+                if err != nil {
+			fmt.Println(err)
+                }
+		req, err := http.NewRequest("PATCH", addr, bytes.NewReader(reqBody))
+                req.Header.Add("Content-Type", "application/merge-patch+json")
+		req.Header.Add("Accept", "application/json")
+                req.Header.Add("Authorization", token)
+                resp, err := httpcli.Do(req)
+                if err != nil {
+			fmt.Println(err)
+                        return err
+                }
+
+                defer resp.Body.Close()
+
+		// Update pod
 		updApp.Spec.Containers[0].Image = img
 		_, updateErr := podClient.Update(updApp)
 		return updateErr
