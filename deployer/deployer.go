@@ -29,9 +29,7 @@ type App struct {
         Spec            interface{}	`json:"spec"`
 }
 type Patch struct {
-        Op      string  `json:"op"`
-        Path    string  `json:"path"`
-	Value   string  `json:"value"`
+	Spec	interface{}     `json:"spec"`
 }
 
 // Send updates
@@ -42,8 +40,8 @@ func sendUpdate(name string, img string) {
 	// Get authorization token and certificate
         certPath := "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
         tokenPath := "/var/run/secrets/kubernetes.io/serviceaccount/token"
-        addr := "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/app.custom.cr/v1alpha1/namespaces/default/apps"
-        read, err := ioutil.ReadFile(tokenPath)
+        addr := "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/app.custom.cr/v1alpha1/namespaces/default/apps/" + name
+	read, err := ioutil.ReadFile(tokenPath)
         if err != nil {
 	        fmt.Println("Cannot read token", err)
         }
@@ -116,20 +114,19 @@ func sendUpdate(name string, img string) {
 		}
 
 		// If exists, send patch
-		newApp := Patch{
-			Op:     "replace",
-                        Path:   "/spec/image",
-                        Value:  img,
+		newApp := Patch {
+			Spec: AppSpec {
+				Image: img,
+			},
 		}
 		reqBody, err := json.Marshal(newApp)
                 if err != nil {
 			fmt.Println(err)
                 }
-
-		req, err := http.NewRequest("PATCH", addr, nil)
-                req.Header.Add("Content-Type", "application/json-patch+json")
+		req, err := http.NewRequest("PATCH", addr, bytes.NewReader(reqBody))
+                req.Header.Add("Content-Type", "application/merge-patch+json")
+		req.Header.Add("Accept", "application/json")
                 req.Header.Add("Authorization", token)
-		req.Header.Add("Data", string(reqBody))
                 resp, err := httpcli.Do(req)
                 if err != nil {
 			fmt.Println(err)
@@ -137,11 +134,7 @@ func sendUpdate(name string, img string) {
                 }
 
                 defer resp.Body.Close()
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			panic(err)
-		}
-		bodyString := string(bodyBytes)
+		fmt.Println(bodyString)
                 return nil
 	})
 	if retryErr != nil {
