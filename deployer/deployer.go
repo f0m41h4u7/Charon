@@ -6,16 +6,17 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+
 	"github.com/docker/distribution/notifications"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
-	"net/http"
-	"os"
 )
 
 type AppMetadata struct {
@@ -193,3 +194,4 @@ func main() {
 	r.POST("/rollback", rollback)
 	r.Run(":31337")
 }
+
