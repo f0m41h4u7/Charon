@@ -5,11 +5,13 @@ import (
 
 	appv1alpha1 "charon-operator/pkg/apis/app/v1alpha1"
 
+	"fmt"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -18,8 +20,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"fmt"
 )
 
 var log = logf.Log.WithName("controller_app")
@@ -101,10 +101,10 @@ func (r *ReconcileApp) Reconcile(request reconcile.Request) (reconcile.Result, e
 	found := &corev1.Pod{}
 
 	// Check Service existance
-        errSvc := handleSvc(instance, r)
-        if errSvc != nil {
-                return reconcile.Result{}, errSvc
-        }
+	errSvc := handleSvc(instance, r)
+	if errSvc != nil {
+		return reconcile.Result{}, errSvc
+	}
 
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
@@ -125,45 +125,45 @@ func (r *ReconcileApp) Reconcile(request reconcile.Request) (reconcile.Result, e
 	return reconcile.Result{}, nil
 }
 
-func handleSvc (cr *appv1alpha1.App, r *ReconcileApp) error {
+func handleSvc(cr *appv1alpha1.App, r *ReconcileApp) error {
 	fmt.Println("handle svc")
-        svc := createService(cr)
+	svc := createService(cr)
 
-        found := &corev1.Service{}
-        err := r.client.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
-        if err != nil && errors.IsNotFound(err) {
-                err = r.client.Create(context.TODO(), svc)
-                if err != nil {
-                        return err
-                }
-        }
-        return nil
+	found := &corev1.Service{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
+	if err != nil && errors.IsNotFound(err) {
+		err = r.client.Create(context.TODO(), svc)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func createService (cr *appv1alpha1.App) *corev1.Service {
+func createService(cr *appv1alpha1.App) *corev1.Service {
 	fmt.Println("create service")
-        labels := map[string]string{
-                "name": cr.Name,
-        }
-        var tport intstr.IntOrString
-        tport.IntVal = 1337
-        return &corev1.Service{
-                ObjectMeta: metav1.ObjectMeta{
-                        Name:           cr.Name,
-                        Namespace:      cr.Namespace,
-                },
-                Spec: corev1.ServiceSpec{
-                        Selector:       labels,
-                        Type:           "ClusterIP",
-                        Ports:          []corev1.ServicePort{
-                                {
-                                        Protocol:       "TCP",
-                                        Port:           1337,
-                                        TargetPort:     tport,
-                                },
-                        },
-                },
-        }
+	labels := map[string]string{
+		"name": cr.Name,
+	}
+	var tport intstr.IntOrString
+	tport.IntVal = 1337
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cr.Name,
+			Namespace: cr.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: labels,
+			Type:     "ClusterIP",
+			Ports: []corev1.ServicePort{
+				{
+					Protocol:   "TCP",
+					Port:       1337,
+					TargetPort: tport,
+				},
+			},
+		},
+	}
 }
 
 func createPod(cr *appv1alpha1.App) *corev1.Pod {
@@ -179,8 +179,8 @@ func createPod(cr *appv1alpha1.App) *corev1.Pod {
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:    cr.Name,
-					Image:   cr.Spec.Image,
+					Name:  cr.Name,
+					Image: cr.Spec.Image,
 				},
 			},
 		},
