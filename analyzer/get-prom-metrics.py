@@ -2,7 +2,7 @@ from prometheus_api_client import Metric, MetricsList, PrometheusConnect
 from prometheus_api_client.utils import parse_datetime, parse_timedelta
 import pandas as pd
 
-pc = PrometheusConnect(url="http://167.172.137.177:30329", disable_ssl=True)
+pc = PrometheusConnect(url="http://prometheus-servic:9090", disable_ssl=True)
 
 start_time = parse_datetime("1h")
 end_time = parse_datetime("now")
