@@ -1,35 +1,38 @@
 package main
+
 import (
-        "github.com/gin-gonic/gin"
-        "github.com/docker/distribution/notifications"
-        "fmt"
+	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
-	"k8s.io/client-go/util/retry"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+
+	"github.com/docker/distribution/notifications"
+	"github.com/gin-gonic/gin"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	corev1 "k8s.io/api/core/v1"
-	"os"
-	"net/http"
-	"io/ioutil"
-	"crypto/tls"
-	"crypto/x509"
-	"bytes"
+	"k8s.io/client-go/util/retry"
 )
+
 type AppMetadata struct {
-	Name	string	`json:"name"`
+	Name string `json:"name"`
 }
 type AppSpec struct {
-	Image   string	`json:"image"`
+	Image string `json:"image"`
 }
 type App struct {
-	ApiVersion      string		`json:"apiVersion"`
-        Kind            string		`json:"kind"`
-        Metadata        interface{}	`json:"metadata"`
-        Spec            interface{}	`json:"spec"`
+	ApiVersion string      `json:"apiVersion"`
+	Kind       string      `json:"kind"`
+	Metadata   interface{} `json:"metadata"`
+	Spec       interface{} `json:"spec"`
 }
 type Patch struct {
-	Spec	interface{}     `json:"spec"`
+	Spec interface{} `json:"spec"`
 }
 
 // Send updates
@@ -38,29 +41,29 @@ func sendUpdate(name string, img string) {
 	img = "charon-registry:5000/" + img
 
 	// Get authorization token and certificate
-        certPath := "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-        tokenPath := "/var/run/secrets/kubernetes.io/serviceaccount/token"
-        addr := "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/app.custom.cr/v1alpha1/namespaces/default/apps/" + name
+	certPath := "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+	tokenPath := "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	addr := "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/app.custom.cr/v1alpha1/namespaces/default/apps/" + name
 	read, err := ioutil.ReadFile(tokenPath)
-        if err != nil {
-	        fmt.Println("Cannot read token", err)
-        }
-        token := "Bearer " + string(read)
+	if err != nil {
+		fmt.Println("Cannot read token", err)
+	}
+	token := "Bearer " + string(read)
 
-        caCert, err := ioutil.ReadFile(certPath)
-        if err != nil {
+	caCert, err := ioutil.ReadFile(certPath)
+	if err != nil {
 		fmt.Println("Cannot get cert")
-        }
-        caCertPool := x509.NewCertPool()
-        caCertPool.AppendCertsFromPEM(caCert)
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
 
 	// Create HTTP client
-        httpcli := &http.Client{
+	httpcli := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				RootCAs: caCertPool,
 			},
-                },
+		},
 	}
 
 	// Create the in-cluster config
@@ -83,21 +86,21 @@ func sendUpdate(name string, img string) {
 			fmt.Printf("Failed to get latest version of Pod: %v. Creating new Pod. \n", getErr)
 
 			// Create updated json config for the App
-		        newApp := App {
-		                ApiVersion:     "app.custom.cr/v1alpha1",
-		                Kind:           "App",
-		                Metadata: AppMetadata {
-		                        Name:   name,
-		                },
-		                Spec: AppSpec {
-		                        Image:  img,
-		                },
-		        }
+			newApp := App{
+				ApiVersion: "app.custom.cr/v1alpha1",
+				Kind:       "App",
+				Metadata: AppMetadata{
+					Name: name,
+				},
+				Spec: AppSpec{
+					Image: img,
+				},
+			}
 
-		        reqBody, err := json.Marshal(newApp)
-		        if err != nil {
-		                fmt.Println(err)
-		        }
+			reqBody, err := json.Marshal(newApp)
+			if err != nil {
+				fmt.Println(err)
+			}
 
 			// Send request to create App
 			req, err := http.NewRequest("POST", addr, bytes.NewReader(reqBody))
@@ -114,26 +117,26 @@ func sendUpdate(name string, img string) {
 		}
 
 		// If exists, send patch to app cr
-		newApp := Patch {
-			Spec: AppSpec {
+		newApp := Patch{
+			Spec: AppSpec{
 				Image: img,
 			},
 		}
 		reqBody, err := json.Marshal(newApp)
-                if err != nil {
+		if err != nil {
 			fmt.Println(err)
-                }
+		}
 		req, err := http.NewRequest("PATCH", addr, bytes.NewReader(reqBody))
-                req.Header.Add("Content-Type", "application/merge-patch+json")
+		req.Header.Add("Content-Type", "application/merge-patch+json")
 		req.Header.Add("Accept", "application/json")
-                req.Header.Add("Authorization", token)
-                resp, err := httpcli.Do(req)
-                if err != nil {
+		req.Header.Add("Authorization", token)
+		resp, err := httpcli.Do(req)
+		if err != nil {
 			fmt.Println(err)
-                        return err
-                }
+			return err
+		}
 
-                defer resp.Body.Close()
+		defer resp.Body.Close()
 
 		// Update pod
 		updApp.Spec.Containers[0].Image = img
@@ -184,10 +187,11 @@ func rollback(c *gin.Context) {
 }
 
 func main() {
-//	gin.SetMode(gin.ReleaseMode)
+	//	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
 	r.POST("/rollout", rollout)
 	r.POST("/rollback", rollback)
 	r.Run(":31337")
 }
+

@@ -19,9 +19,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	rbac "k8s.io/api/rbac/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
-	rbac "k8s.io/api/rbac/v1beta1"
 )
 
 var log = logf.Log.WithName("controller_deployer")
@@ -35,7 +35,7 @@ func Add(mgr manager.Manager) error {
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	config := mgr.GetConfig()
-	clientset,err := kubernetes.NewForConfig(config)
+	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic("Failed to get node")
 	}
@@ -73,9 +73,9 @@ var _ reconcile.Reconciler = &ReconcileDeployer{}
 
 // ReconcileDeployer reconciles a Deployer object
 type ReconcileDeployer struct {
-	client		client.Client
-	scheme		*runtime.Scheme
-	clientset	kubernetes.Interface
+	client    client.Client
+	scheme    *runtime.Scheme
+	clientset kubernetes.Interface
 }
 
 // Reconcile reads that state of the cluster for a Deployer object and makes changes based on the state read
@@ -137,149 +137,149 @@ func (r *ReconcileDeployer) Reconcile(request reconcile.Request) (reconcile.Resu
 	return reconcile.Result{}, nil
 }
 
-func handleRBAC (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) error{
+func handleRBAC(cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) error {
 	role := createRole(cr, r)
-        rb := createRB(cr, r)
-        sa := createSA(cr, r)
+	rb := createRB(cr, r)
+	sa := createSA(cr, r)
 
 	foundRole := &rbac.Role{}
-        err := r.client.Get(context.TODO(), types.NamespacedName{Name: role.Name, Namespace: role.Namespace}, foundRole)
-        if err != nil && errors.IsNotFound(err) {
-                err = r.client.Create(context.TODO(), role)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: role.Name, Namespace: role.Namespace}, foundRole)
+	if err != nil && errors.IsNotFound(err) {
+		err = r.client.Create(context.TODO(), role)
 		if err != nil {
 			return err
 		}
-        }
+	}
 
 	foundRB := &rbac.RoleBinding{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: rb.Name, Namespace: rb.Namespace}, foundRB)
-        if err != nil && errors.IsNotFound(err) {
-                err = r.client.Create(context.TODO(), rb)
+	if err != nil && errors.IsNotFound(err) {
+		err = r.client.Create(context.TODO(), rb)
 		if err != nil {
 			return err
-                }
-        }
+		}
+	}
 
 	foundSA := &corev1.ServiceAccount{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: sa.Name, Namespace: sa.Namespace}, foundSA)
-        if err != nil && errors.IsNotFound(err) {
-                err = r.client.Create(context.TODO(), sa)
+	if err != nil && errors.IsNotFound(err) {
+		err = r.client.Create(context.TODO(), sa)
 		if err != nil {
-                        return err
-                }
-        }
+			return err
+		}
+	}
 	return nil
 }
 
-func handleSvc (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) error {
+func handleSvc(cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) error {
 	svc := createService(cr)
 
 	found := &corev1.Service{}
-        err := r.client.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
-        if err != nil && errors.IsNotFound(err) {
-                err = r.client.Create(context.TODO(), svc)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found)
+	if err != nil && errors.IsNotFound(err) {
+		err = r.client.Create(context.TODO(), svc)
 		if err != nil {
-                        return err
+			return err
 		}
-        }
+	}
 	return nil
 }
 
-func createService (cr *deployerv1alpha1.Deployer) *corev1.Service {
+func createService(cr *deployerv1alpha1.Deployer) *corev1.Service {
 	labels := map[string]string{
-                "name": cr.Name,
-        }
+		"name": cr.Name,
+	}
 	var tport intstr.IntOrString
 	tport.IntVal = 31337
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-                        Name:		cr.Name,
-			Namespace:	cr.Namespace,
+			Name:      cr.Name,
+			Namespace: cr.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
-			Selector:	labels,
-			Type:		"ClusterIP",
-			Ports:		[]corev1.ServicePort{
+			Selector: labels,
+			Type:     "ClusterIP",
+			Ports: []corev1.ServicePort{
 				{
-					Protocol:	"TCP",
-					Port:		31337,
-					TargetPort:	tport,
+					Protocol:   "TCP",
+					Port:       31337,
+					TargetPort: tport,
 				},
 			},
 		},
 	}
 }
 
-func createRole (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *rbac.Role {
-        role := &rbac.Role{
-                TypeMeta: metav1.TypeMeta{
-                        APIVersion:     "rbac.authorization.k8s.io/v1",
-                        Kind:           "Role",
-                },
-                ObjectMeta: metav1.ObjectMeta{
-                        Name:           "charon-deployer-role",
-                        Namespace:      "default",
-                },
+func createRole(cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *rbac.Role {
+	role := &rbac.Role{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "Role",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "charon-deployer-role",
+			Namespace: "default",
+		},
 		Rules: []rbac.PolicyRule{
 			{
-				APIGroups:	[]string{"app.custom.cr", "apps"},
-				Resources:	[]string{"apps", "pods"},
-				Verbs:		[]string{"get", "create", "update", "delete", "patch", "list"},
+				APIGroups: []string{"app.custom.cr", "apps"},
+				Resources: []string{"apps", "pods"},
+				Verbs:     []string{"get", "create", "update", "delete", "patch", "list"},
 			},
 			{
-				APIGroups:      []string{"apps"},
-                                Resources:      []string{"*"},
-                                Verbs:          []string{"get", "create", "update", "delete", "patch", "list"},
+				APIGroups: []string{"apps"},
+				Resources: []string{"*"},
+				Verbs:     []string{"get", "create", "update", "delete", "patch", "list"},
 			},
 			{
-				APIGroups:      []string{""},
-                                Resources:      []string{"*"},
-                                Verbs:          []string{"get", "create", "update", "delete", "patch", "list"},
+				APIGroups: []string{""},
+				Resources: []string{"*"},
+				Verbs:     []string{"get", "create", "update", "delete", "patch", "list"},
 			},
 		},
-        }
+	}
 
-        controllerutil.SetControllerReference(cr, role, r.scheme)
-        return role
+	controllerutil.SetControllerReference(cr, role, r.scheme)
+	return role
 }
 
-func createRB (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *rbac.RoleBinding {
-        rb := &rbac.RoleBinding{
-                TypeMeta: metav1.TypeMeta{
-                        APIVersion:     "rbac.authorization.k8s.io/v1",
-                        Kind:           "ClusterRoleBinding",
-                },
-                ObjectMeta: metav1.ObjectMeta{
-                        Name:           "charon-deployer-rb",
-                        Namespace:      "default",
-                },
+func createRB(cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *rbac.RoleBinding {
+	rb := &rbac.RoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "ClusterRoleBinding",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "charon-deployer-rb",
+			Namespace: "default",
+		},
 		RoleRef: rbac.RoleRef{
-			APIGroup:	"rbac.authorization.k8s.io",
-			Kind:		"Role",
-			Name:		"charon-deployer-role",
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     "charon-deployer-role",
 		},
 		Subjects: []rbac.Subject{
 			{
-				Kind:		"ServiceAccount",
-				Name:		"charon-deployer-sa",
-				Namespace:	"default",
+				Kind:      "ServiceAccount",
+				Name:      "charon-deployer-sa",
+				Namespace: "default",
 			},
 		},
-        }
+	}
 
-        controllerutil.SetControllerReference(cr, rb, r.scheme)
-        return rb
+	controllerutil.SetControllerReference(cr, rb, r.scheme)
+	return rb
 }
 
-func createSA (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *corev1.ServiceAccount {
+func createSA(cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *corev1.ServiceAccount {
 	sa := &corev1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion:	"v1",
-			Kind:		"ServiceAccount",
+			APIVersion: "v1",
+			Kind:       "ServiceAccount",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:		"charon-deployer-sa",
-			Namespace:	"default",
+			Name:      "charon-deployer-sa",
+			Namespace: "default",
 		},
 	}
 
@@ -287,7 +287,7 @@ func createSA (cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *corev1.Serv
 	return sa
 }
 
-func createPod (cr *deployerv1alpha1.Deployer) *corev1.Pod {
+func createPod(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 	labels := map[string]string{
 		"name": cr.Name,
 	}
@@ -298,11 +298,11 @@ func createPod (cr *deployerv1alpha1.Deployer) *corev1.Pod {
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{
-			ServiceAccountName:		"charon-deployer-sa",
-			Containers:			[]corev1.Container{
+			ServiceAccountName: "charon-deployer-sa",
+			Containers: []corev1.Container{
 				{
-					Name:	cr.Name,
-					Image:	cr.Spec.Image,
+					Name:  cr.Name,
+					Image: cr.Spec.Image,
 				},
 			},
 		},
