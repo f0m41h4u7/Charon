@@ -9,7 +9,6 @@ def calc_delta(vals):
 	return diff
 
 def monotonically_inc(vals):
-	# check corner case
 	if len(vals) == 1:
 		return True
 	diff = calc_delta(vals)
@@ -37,15 +36,16 @@ def get_metrics():
 		end_time=end_time,
 		chunk_size=chunk_size,
 	)
-	metrics_object_list = MetricsList(metric_data)
-	for item in metrics_object_list:
-		vals = np.array(item.metric_values['y'].tolist())
-		if monotonically_inc(vals):
-			vals = calc_delta(vals)
+        metrics_object_list = MetricsList(metric_data)
+        for item in metrics_object_list:
+            vals = np.array(item.metric_values['y'].tolist())
+            if monotonically_inc(vals):
+                vals = calc_delta(vals)
 
-		df = pd.DataFrame()
-		df['ds'] = item.metric_values['ds']
-		df['y'] = vals
+            df = pd.DataFrame()
+            df['ds'] = item.metric_values['ds']
+            df['y'] = vals
+
         dataset.append(df)
 
     return dataset
