@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pylab as plt
 import datetime as dt
+import random
+import string
 
 class ProphetForecast:
     def __init__(self, train, test):
@@ -30,4 +32,5 @@ class ProphetForecast:
         plt.ylabel("Value")
         plt.legend(loc=1)
         plt.title("Prophet Model Forecast")
-        plt.show()
+        name = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+        plt.savefig(name + ".png")
