@@ -11,7 +11,7 @@ RUN	conda install --yes \
 	&& conda install -c conda-forge fbprophet \
 	&& conda clean -afy \
 	&& apt-get -y update && apt-get -y install vim bash curl \
-	&& pip install prometheus_api_client \
+	&& pip install prometheus_api_client tsfresh\
 	&& find /opt/conda/ -follow -type f -name '*.a' -delete \
 	&& find /opt/conda/ -follow -type f -name '*.pyc' -delete \
 	&& find /opt/conda/ -follow -type f -name '*.js.map' -delete \

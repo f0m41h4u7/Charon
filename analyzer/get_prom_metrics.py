@@ -20,32 +20,28 @@ def monotonically_inc(vals):
 		return False
 
 def get_metrics():
-    pc = PrometheusConnect(url="http://prometheus-service:9090", disable_ssl=True)
+    pc = PrometheusConnect(url="prometheus-service:9090", disable_ssl=True)
 
     start_time = parse_datetime("1h")
     end_time = parse_datetime("now")
     chunk_size = parse_timedelta("now", "1h")
 
-    dataset = []
+    metric_type = "testMetrics"
 
-    all = pc.all_metrics()
-    for metric_type in all:
-        metric_data = pc.get_metric_range_data(
-		metric_type,
-		start_time=start_time,
-		end_time=end_time,
-		chunk_size=chunk_size,
-	)
-        metrics_object_list = MetricsList(metric_data)
-        for item in metrics_object_list:
-            vals = np.array(item.metric_values['y'].tolist())
-            if monotonically_inc(vals):
-                vals = calc_delta(vals)
+    metric_data = pc.get_metric_range_data(
+	metric_type,
+	start_time=start_time,
+	end_time=end_time,
+	chunk_size=chunk_size,
+    )
+    
+    metrics_object_list = MetricsList(metric_data)
+    df = pd.DataFrame()
+    for item in metrics_object_list:
+        vals = np.array(item.metric_values['y'].tolist())
+        if monotonically_inc(vals):
+            vals = calc_delta(vals)
+        df['ds'] = item.metric_values['ds']
+        df['y'] = vals
 
-            df = pd.DataFrame()
-            df['ds'] = item.metric_values['ds']
-            df['y'] = vals
-
-        dataset.append(df)
-
-    return dataset
+    return df
