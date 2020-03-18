@@ -30,4 +30,4 @@ class ProphetForecast:
         plt.ylabel("Value")
         plt.legend(loc=1)
         plt.title("Prophet Model Forecast")
-        plt.show()
+        plt.savefig("plot.png")

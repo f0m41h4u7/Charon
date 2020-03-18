@@ -20,7 +20,7 @@ def monotonically_inc(vals):
 		return False
 
 def get_metrics():
-    pc = PrometheusConnect(url="prometheus-service:9090", disable_ssl=True)
+    pc = PrometheusConnect(url="http:/prometheus-service:9090", disable_ssl=True)
 
     start_time = parse_datetime("1h")
     end_time = parse_datetime("now")
