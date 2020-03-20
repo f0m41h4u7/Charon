@@ -4,7 +4,7 @@
 [![Docker](https://img.shields.io/docker/v/f0m41h4u7/deployer?sort=date)](https://hub.docker.com/repository/docker/f0m41h4u7/deployer)
 [![Updates](https://pyup.io/repos/github/f0m41h4u7/Charon/shield.svg)](https://pyup.io/repos/github/f0m41h4u7/Charon/)
 [![Python 3](https://pyup.io/repos/github/f0m41h4u7/Charon/python-3-shield.svg)](https://pyup.io/repos/github/f0m41h4u7/Charon/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Smart rollout/rollback system for K8s
 
