@@ -1,62 +1,55 @@
 from fbprophet import Prophet
-import pandas as pd
-import numpy as np
-import matplotlib.pylab as plt
-import datetime as dt
+import pandas 
+import datetime
+import logging
+from prometheus_api_client import Metric
 
+_LOGGER = logging.getLogger(__name__)
 
 class ProphetForecast:
-    def __init__(self, train, test):
-        self.train = train
-        self.test = test
+    model_name = "prophet"
+    model_description = "Forecasted value from Prophet model"
+    model = None
+    predicted_df = None
+    metric = None
 
-    def fit_model(self, n_predict):
-        m = Prophet(
-            daily_seasonality=False, weekly_seasonality=False, yearly_seasonality=False
-        )
-        m.fit(self.train)
-        future = m.make_future_dataframe(periods=len(self.test), freq="1MIN")
-        self.forecast = m.predict(future)
+    def __init__(self, metric, rolling_data_window_size="10d"):
+        """Initialize the Metric object."""
+        self.metric = Metric(metric, rolling_data_window_size)
 
-        return self.forecast
+    def train(self, metric_data=None, prediction_duration=15):
+        """Train the Prophet model and store the predictions in predicted_df."""
+        prediction_freq = "1MIN"
+        # convert incoming metric to Metric Object
+        if metric_data:
+            # because the rolling_data_window_size is set, this df should not bloat
+            self.metric += Metric(metric_data)
 
-    def graph(self):
-        fig = plt.figure(figsize=(40, 10))
-        plt.plot(
-            np.array(self.train["ds"]),
-            np.array(self.train["y"]),
-            "b",
-            label="train",
-            linewidth=3,
-        )
-        plt.plot(
-            np.array(self.test["ds"]),
-            np.array(self.test["y"]),
-            "g",
-            label="test",
-            linewidth=3,
+        self.model = Prophet(
+            daily_seasonality=True, weekly_seasonality=True, yearly_seasonality=True
         )
 
-        forecast_ds = np.array(self.forecast["ds"])
-        plt.plot(
-            forecast_ds, np.array(self.forecast["yhat"]), "o", label="yhat", linewidth=3
+        _LOGGER.info(
+            "training data range: %s - %s", self.metric.start_time, self.metric.end_time
         )
-        plt.plot(
-            forecast_ds,
-            np.array(self.forecast["yhat_upper"]),
-            "y",
-            label="yhat_upper",
-            linewidth=3,
+        _LOGGER.debug("begin training")
+
+        self.model.fit(self.metric.metric_values)
+        future = self.model.make_future_dataframe(
+            periods=int(prediction_duration),
+            freq=prediction_freq,
+            include_history=False,
         )
-        plt.plot(
-            forecast_ds,
-            np.array(self.forecast["yhat_lower"]),
-            "y",
-            label="yhat_lower",
-            linewidth=3,
+        forecast = self.model.predict(future)
+        forecast["timestamp"] = forecast["ds"]
+        forecast = forecast[["timestamp", "yhat", "yhat_lower", "yhat_upper"]]
+        forecast = forecast.set_index("timestamp")
+        self.predicted_df = forecast
+        _LOGGER.debug(forecast)
+
+    def predict_value(self, prediction_datetime):
+        """Return the predicted value of the metric for the prediction_datetime."""
+        nearest_index = self.predicted_df.index.get_loc(
+            prediction_datetime, method="nearest"
         )
-        plt.xlabel("Timestamp")
-        plt.ylabel("Value")
-        plt.legend(loc=1)
-        plt.title("Prophet Model Forecast")
-        plt.savefig("plot.png")
+        return self.predicted_df.iloc[[nearest_index]]

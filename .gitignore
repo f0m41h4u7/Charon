@@ -7,3 +7,4 @@ reset.sh
 monitoring/*.sh
 deployer/pkg/
 analyzer/*.sh
+analyzer/.env
