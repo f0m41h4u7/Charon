@@ -7,3 +7,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 Smart rollout/rollback system for K8s
+
+![alt text](https://raw.githubusercontent.com/f0m41h4u7/Charon/master/charon-project-scheme.png)
