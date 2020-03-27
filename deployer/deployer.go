@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
@@ -99,17 +100,19 @@ func sendUpdate(name string, img string) {
 
 			reqBody, err := json.Marshal(newApp)
 			if err != nil {
-				fmt.Println(err)
+				log.Fatal(fmt.Errorf("Failed to create cr spec: %v\n %w\n", newApp, err))
 			}
 
 			// Send request to create App
 			req, err := http.NewRequest("POST", addr, bytes.NewReader(reqBody))
+			if err != nil {
+				log.Fatal(fmt.Errorf("Failed to send create request: %w\n", err))
+			}
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Add("Authorization", token)
 			resp, err := httpcli.Do(req)
 			if err != nil {
-				fmt.Println(err)
-				return err
+				return fmt.Errorf("Failed to create cr; %w\n", err)
 			}
 
 			defer resp.Body.Close()
@@ -124,9 +127,13 @@ func sendUpdate(name string, img string) {
 		}
 		reqBody, err := json.Marshal(newApp)
 		if err != nil {
-			fmt.Println(err)
+			log.Fatal(fmt.Errorf("Failed to create cr spec: %v\n %w\n", newApp, err))
 		}
 		req, err := http.NewRequest("PATCH", addr, bytes.NewReader(reqBody))
+		if err != nil {
+                        log.Fatal(fmt.Errorf("Failed to send patch; %w\n", err))
+                }
+
 		req.Header.Add("Content-Type", "application/merge-patch+json")
 		req.Header.Add("Accept", "application/json")
 		req.Header.Add("Authorization", token)
@@ -144,7 +151,7 @@ func sendUpdate(name string, img string) {
 		return updateErr
 	})
 	if retryErr != nil {
-		panic(fmt.Errorf("Update failed: %v", retryErr))
+		log.Fatal(fmt.Errorf("Update failed: %v", retryErr))
 	} else {
 		fmt.Println("Successfully updated pod.")
 	}
@@ -159,8 +166,7 @@ func rollout(c *gin.Context) {
 	var envelope notifications.Envelope
 	err := decoder.Decode(&envelope)
 	if err != nil {
-		fmt.Sprintf("Failed to decode envelope: %s\n", err)
-		return
+		log.Fatal(fmt.Sprintf("Failed to decode envelope: %s\n", err))
 	}
 
 	// Process events
@@ -192,6 +198,9 @@ func main() {
 
 	r.POST("/rollout", rollout)
 	r.POST("/rollback", rollback)
-	r.Run(":31337")
+	err := r.Run(":31337")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
