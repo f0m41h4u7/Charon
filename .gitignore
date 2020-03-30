@@ -1,4 +1,4 @@
-backup*
+*backup*
 *.json
 *.sh
 registry*
@@ -7,3 +7,4 @@ reset.sh
 monitoring/*.sh
 deployer/pkg/
 analyzer/*.sh
+*pycache*

@@ -177,6 +177,11 @@ func rollout(c *gin.Context) {
 	c.JSON(200, 0)
 }
 
+type Alarm struct {
+	Image   string `json:"image"`
+	Version string `json "version"`
+}
+
 // Handle rollback notifications
 func rollback(c *gin.Context) {
 	//body := c.Request.Body
@@ -194,4 +199,3 @@ func main() {
 	r.POST("/rollback", rollback)
 	r.Run(":31337")
 }
-
