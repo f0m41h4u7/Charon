@@ -50,50 +50,36 @@ def show_plot(plot_data, delta, title):
     plt.savefig("plot.png")
 
 """
-
 df = get_metrics()
-
 #train = df[0 : int(0.7 * len(df['y']))]
 #test = df[int(0.7 * len(vals)) :] 
 uni_data = df['y'].values
 #data.index = train['ds']
-
 uni_train_mean = uni_data[:TRAIN_SPLIT].mean()
 uni_train_std = uni_data[:TRAIN_SPLIT].std()
 uni_data = (uni_data-uni_train_mean)/uni_train_std
-
 univariate_past_history = 20
 univariate_future_target = 0
-
 x_train_uni, y_train_uni = univariate_data(uni_data, 0, TRAIN_SPLIT, univariate_past_history, univariate_future_target)
 x_val_uni, y_val_uni = univariate_data(uni_data, TRAIN_SPLIT, None, univariate_past_history, univariate_future_target)
-
 print ('Single window of past history')
 print (x_train_uni[0])
 print ('\n Target value to predict')
 print (y_train_uni[0])
-
 BATCH_SIZE = 36
 BUFFER_SIZE = 800
-
 train_univariate = tf.data.Dataset.from_tensor_slices((x_train_uni, y_train_uni))
 train_univariate = train_univariate.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
-
 val_univariate = tf.data.Dataset.from_tensor_slices((x_val_uni, y_val_uni))
 val_univariate = val_univariate.batch(BATCH_SIZE).repeat()
-
 simple_lstm_model = tf.keras.models.Sequential([tf.keras.layers.LSTM(8, input_shape=x_train_uni.shape[-2:]), tf.keras.layers.Dense(1)])
 simple_lstm_model.compile(optimizer='adam', loss='mae')
-
 print("*************************************************************")
 for x, y in val_univariate.take(1):
     print(simple_lstm_model.predict(x).shape)
-
 EVALUATION_INTERVAL = 200
 EPOCHS = 10
-
 simple_lstm_model.fit(train_univariate, epochs=EPOCHS, steps_per_epoch=EVALUATION_INTERVAL, validation_data=val_univariate, validation_steps=50)
-
 for x, y in val_univariate.take(1):
     show_plot([x[0].numpy(), y[0].numpy(), simple_lstm_model.predict(x)[0]], 0, 'Simple LSTM model')
 """

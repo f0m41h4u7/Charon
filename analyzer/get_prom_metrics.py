@@ -34,7 +34,6 @@ def get_metrics():
         end_time=end_time,
         chunk_size=chunk_size,
     )
-
     metrics_object_list = MetricsList(metric_data)
     for item in metrics_object_list:
         vals = np.array(item.metric_values['y'].tolist())
@@ -43,7 +42,6 @@ def get_metrics():
             #continue
         df['y'] = vals
     return df
-
     """
     all = pc.all_metrics()
 
