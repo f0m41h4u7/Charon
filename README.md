@@ -4,6 +4,13 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/f0m41h4u7/Charon)](https://goreportcard.com/report/github.com/f0m41h4u7/Charon)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-Smart rollout/rollback system for K8s
+Smart version managing system for K8s
+
+* Automatically deploys a pod from image pushed to docker registry
+* Manages pod lifecycle
+* Analyzes pod metrics
+* If an anomaly was detected, rolls the pod back to a stable version
+
+## Charon architecture
 
 ![alt text](https://raw.githubusercontent.com/f0m41h4u7/Charon/master/charon-project-scheme.png)
