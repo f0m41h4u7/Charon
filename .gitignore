@@ -8,3 +8,4 @@ monitoring/*.sh
 deployer/pkg/
 analyzer/*.sh
 *pycache*
+*.env*
