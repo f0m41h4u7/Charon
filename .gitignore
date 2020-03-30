@@ -9,3 +9,4 @@ deployer/pkg/
 analyzer/*.sh
 *pycache*
 *.env*
+analyzer/.*
