@@ -10,3 +10,4 @@ analyzer/*.sh
 *pycache*
 *.env*
 analyzer/.*
+.git-template*
