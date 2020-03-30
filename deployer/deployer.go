@@ -183,14 +183,14 @@ func rollout(c *gin.Context) {
 	c.JSON(200, 0)
 }
 
-type Anomaly struct {
+type Alarm struct {
 	Image string `json:"image"`
 }
 
 // Handle rollback notifications
 func rollback(c *gin.Context) {
 	body := c.Request.Body
-	var anom = Anomaly{}
+	var anom = Alarm{}
 	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		log.Fatal(err)
@@ -200,9 +200,8 @@ func rollback(c *gin.Context) {
 		err = fmt.Errorf("Failed to parse body: %s\n %w", body, err)
 		log.Fatal(err)
 	}
-	
 
-	//sendUpdate(name, img)
+	sendUpdate(anom.Image, anom.Image)
 	c.JSON(200, 0)
 }
 

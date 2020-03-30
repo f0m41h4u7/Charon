@@ -3,7 +3,8 @@ kind: Deployer
 metadata:
   name: charon-deployer
 spec:
-  image: charon-registry:5000/deployer
+  deployerImage: charon-registry:5000/deployer
+  analyzerImage: charon-registry:5000/analyzer
   serviceAccountName: charon-deployer-serv-acc
   mountPath: /var/run/secrets
   tokenName: deployer-secret

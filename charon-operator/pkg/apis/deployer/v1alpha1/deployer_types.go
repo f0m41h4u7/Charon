@@ -5,7 +5,8 @@ import (
 )
 
 type DeployerSpec struct {
-	Image string `json:"image"`
+	DeployerImage string `json:"deployerImage"`
+	AnalyzerImage string `json:"analyzerImage"`
 }
 
 type DeployerStatus struct {

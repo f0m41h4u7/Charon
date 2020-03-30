@@ -13,6 +13,9 @@ import (
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 )
+type Alarm struct {
+	Image string `json:"image"`
+}
 
 func MinMax(array []float64) (float64, float64) {
 	var max float64 = array[0]
@@ -81,7 +84,21 @@ func anomalyDetect() {
 
 	probability := anom.Eval()
 	if probability >= 85.0 {
-		// send alert
+		alarm := Alarm {
+			Image: image,
+		}
+
+		reqBody, err := json.Marshal(alarm)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		client := http.Client{}
+		req, err := http.NewRequest("POST", "charon-deployer:31337/rollback", bytes.NewReader(reqBody))
+		if err != nil {
+			err = fmt.Errorf("Failed to send notification: %w", err)
+			log.Fatal(err)
+		}
 	}
 }
 
