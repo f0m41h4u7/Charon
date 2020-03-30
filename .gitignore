@@ -12,3 +12,4 @@ analyzer/*.sh
 analyzer/.*
 .git-template*
 .pre-commit-config.yaml
+.talismanrc
