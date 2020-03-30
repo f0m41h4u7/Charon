@@ -28,29 +28,36 @@ def show_plot(plot_data, delta, title):
     plt.savefig("plot.png")
 
 df = get_metrics()
-print(df)
+dataset = df.values
+TRAIN_SPLIT = 70000
 
-vals = df["y"]
-train = df[0 : int(0.7 * len(vals))]
-test = df[int(0.7 * len(vals)) :]
-
-train_mean = train.mean()
-train_std = train.std()
-data = (train['y']-train_mean)/train_std
+train_mean = dataset[:TRAIN_SPLIT].mean()
+train_std = dataset[:TRAIN_SPLIT].std()
+dataset = (dataset-train_mean)/train_std
 
 past_history = 20
-future_target = 0
+future_target = 72
+EVALUATION_INTERVAL = 200
+EPOCHS = 10
+STEP = 6
 
 x_train, y_train = univariate_data(data, 0, TRAIN_SPLIT, past_history, future_target)
 x_val, y_val = univariate_data(data, TRAIN_SPLIT, None, past_history, future_target)
 
-print ('Single window of past history')
-print (x_train[0])
-print ('\n Target temperature to predict')
-print (y_train[0])
+train_data_multi = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_data_multi = train_data_multi.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
+
+val_data_multi = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+val_data_multi = val_data.batch(BATCH_SIZE).repeat()
+
+multi_step_model = tf.keras.models.Sequential()
+multi_step_model.add(tf.keras.layers.LSTM(32, return_sequences=True, input_shape=x_train_multi.shape[-2:]))
+multi_step_model.add(tf.keras.layers.LSTM(16, activation='relu'))
+multi_step_model.add(tf.keras.layers.Dense(72))
+
+multi_step_model.compile(optimizer=tf.keras.optimizers.RMSprop(clipvalue=1.0), loss='mae')
+
+for x, y in val_data_multi.take(1):
+    print (multi_step_model.predict(x).shape)
 
 show_plot([x_train[0], y_train[0]], 0, 'Test metrics')
-
-#pf = ProphetForecast(train, test)
-#forecast = pf.fit_model(len(test))
-#pf.graph()

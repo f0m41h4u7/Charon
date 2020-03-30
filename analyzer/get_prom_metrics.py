@@ -22,12 +22,12 @@ def monotonically_inc(vals):
 def get_metrics():
     pc = PrometheusConnect(os.getenv('PROMETHEUS_HOST'), disable_ssl=True)
 
-    start_time = parse_datetime("100h")
+    start_time = parse_datetime("200h")
     end_time = parse_datetime("now")
     chunk_size = parse_timedelta("now", "1h")
 
     df = pd.DataFrame()
-    """
+   
     metric_data = pc.get_metric_range_data(
         "go_goroutines",
         start_time=start_time,
@@ -61,3 +61,4 @@ def get_metrics():
             df[metric_type] = vals
         if len(df.columns) == 3:
             return df
+"""

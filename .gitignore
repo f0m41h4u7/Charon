@@ -11,3 +11,4 @@ analyzer/*.sh
 *.env*
 analyzer/.*
 .git-template*
+.pre-commit-config.yaml
