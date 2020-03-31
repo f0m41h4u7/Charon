@@ -8,6 +8,7 @@ require (
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/gin-gonic/gin v1.5.0
 	github.com/gorilla/mux v1.7.4 // indirect
+	github.com/joho/godotenv v1.3.0
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
