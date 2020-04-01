@@ -183,6 +183,32 @@ func (d *Deployer) sendPatch(name string, img string) {
 	}
 }
 
+type TagsList struct {
+	Name string
+	Tags []string
+}
+
+func (d *Deployer) getPreviousVersion(name string) string {
+	registryAddr := os.Getenv("REGISTRY") + "v2/" + name + "/tags/list"
+	resp, err := http.Get(registryAddr)
+	if err != nil {
+		err = fmt.Errorf("Failed to get image tags: %w", err)
+		log.Fatal(err)
+	}
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var tl = TagsList{}
+	err = json.Unmarshal(respBytes, &tl)
+	if err != nil {
+		err = fmt.Errorf("Failed to parse body: %s\n %w", resp.Body, err)
+		log.Fatal(err)
+	}
+	return tl.Tags[1]
+}
+
 // Handle Registry notifications
 func rollout(c *gin.Context) {
 	body := c.Request.Body
@@ -229,12 +255,14 @@ func rollback(c *gin.Context) {
 		err = fmt.Errorf("Failed to parse body: %s\n %w", body, err)
 		log.Fatal(err)
 	}
+	log.Printf("Received a rollback request for image: %s\n", anom.Image)
 
 	d := newDeployer()
 	// Find out, which version is deployed
+	targetVersion := d.getPreviousVersion(anom.Image)
 
-	imgName := os.Getenv("REGISTRY") + anom.Image
-	d.sendPatch(imgName, imgName)
+	// Patch CR and rollback pod
+	d.sendPatch(anom.Image, anom.Image + ":" + targetVersion)
 	c.JSON(200, 0)
 }
 

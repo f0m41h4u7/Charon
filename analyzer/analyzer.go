@@ -59,6 +59,7 @@ func getMetrics() ([]float64, string) {
 		fmt.Printf("Warnings: %v\n", warnings)
 	}
 
+	log.Printf("Connected to Prometheus... Querying metrics...\n")
 	pairs := result.(model.Matrix)[0].Values
 	var vals []float64
 	for _, p := range pairs {
@@ -87,6 +88,7 @@ func anomalyDetect() {
 	}
 
 	probability := anom.Eval()
+	log.Printf("Probability: %f\n", probability)
 	if probability >= 85.0 {
 		alarm := Alarm{
 			Image: image,
