@@ -47,11 +47,11 @@ func getMetrics() ([]float64, string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	r := v1.Range{
-		Start: time.Now().Add(-100 * time.Hour),
+		Start: time.Now().Add(-100*time.Hour),
 		End:   time.Now(),
 		Step:  time.Minute,
 	}
-	result, warnings, err := v1api.QueryRange(ctx, "go_goroutines{instance=\"test-app:1337\",job=\"test-app\"}", r)
+	result, warnings, err := v1api.QueryRange(ctx, "testMetrics{instance=\"test-app:1337\",job=\"test-app\"}", r)
 	if err != nil {
 		log.Fatal(fmt.Errorf("Error querying Prometheus: %w\n", err))
 	}
@@ -89,7 +89,7 @@ func anomalyDetect() {
 
 	probability := anom.Eval()
 	log.Printf("Probability: %f\n", probability)
-	if probability >= 85.0 {
+	if probability > 0.85 {
 		alarm := Alarm{
 			Image: image,
 		}
@@ -99,11 +99,20 @@ func anomalyDetect() {
 			log.Fatal(err)
 		}
 
-		req, err := http.NewRequest("POST", "charon-deployer:31337/rollback", bytes.NewReader(reqBody))
+		log.Printf("ANOMALY: %f\n", probability)
+		httpcli := &http.Client{}
+		req, err := http.NewRequest("POST", "http://charon-deployer:31337/rollback", bytes.NewReader(reqBody))
 		if err != nil {
 			err = fmt.Errorf("Failed to send notification: %v\n%w", req, err)
 			log.Fatal(err)
 		}
+		req.Header.Add("Content-Type", "application/json")
+		resp, err := httpcli.Do(req)
+		if err != nil {
+			log.Fatal(fmt.Errorf("Failed to send notification; %w\n", err))
+		}
+		defer resp.Body.Close()
+		log.Printf("Sent rollback request!")
 	}
 }
 
