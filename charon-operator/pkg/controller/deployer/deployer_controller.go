@@ -305,7 +305,7 @@ func createPod(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 					Image: cr.Spec.DeployerImage,
 				},
 				{
-					Name:  "charon-analyzer",
+					Name:  cr.Spec.Analyzer,
 					Image: cr.Spec.AnalyzerImage,
 				},
 			},

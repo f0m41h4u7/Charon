@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -13,6 +16,7 @@ import (
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 )
+
 type Alarm struct {
 	Image string `json:"image"`
 }
@@ -84,7 +88,7 @@ func anomalyDetect() {
 
 	probability := anom.Eval()
 	if probability >= 85.0 {
-		alarm := Alarm {
+		alarm := Alarm{
 			Image: image,
 		}
 
@@ -93,10 +97,9 @@ func anomalyDetect() {
 			log.Fatal(err)
 		}
 
-		client := http.Client{}
 		req, err := http.NewRequest("POST", "charon-deployer:31337/rollback", bytes.NewReader(reqBody))
 		if err != nil {
-			err = fmt.Errorf("Failed to send notification: %w", err)
+			err = fmt.Errorf("Failed to send notification: %v\n%w", req, err)
 			log.Fatal(err)
 		}
 	}

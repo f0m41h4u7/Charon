@@ -5,6 +5,7 @@ import (
 )
 
 type DeployerSpec struct {
+	Analyzer      string `json:"analyzer"`
 	DeployerImage string `json:"deployerImage"`
 	AnalyzerImage string `json:"analyzerImage"`
 }

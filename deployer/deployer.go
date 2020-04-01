@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/docker/distribution/notifications"
 	"github.com/gin-gonic/gin"
@@ -19,7 +20,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/util/retry"
 )
 
 var (
@@ -51,7 +51,7 @@ type Deployer struct {
 	podClient  v1.PodInterface
 }
 
-func (d Deployer) setToken() {
+func (d *Deployer) setToken() {
 	read, err := ioutil.ReadFile(tokenPath)
 	if err != nil {
 		log.Fatal(fmt.Errorf("Cannot read token, %w\n", err))
@@ -59,7 +59,7 @@ func (d Deployer) setToken() {
 	d.token = "Bearer " + string(read)
 }
 
-func (d Deployer) setCertPool() {
+func (d *Deployer) setCertPool() {
 	caCert, err := ioutil.ReadFile(certPath)
 	if err != nil {
 		log.Fatal(fmt.Errorf("Cannot get cert, %w\n", err))
@@ -68,17 +68,17 @@ func (d Deployer) setCertPool() {
 	d.caCertPool.AppendCertsFromPEM(caCert)
 }
 
-func (d Deployer) createPodClient() {
+func (d *Deployer) createPodClient() {
 	// Create the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err.Error())
+		log.Fatal(fmt.Errorf("Failed to create in-cluster config: %w", err.Error()))
 	}
 
 	// Create clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		log.Fatal(fmt.Errorf("Failed to create clientset: %w", err.Error()))
 	}
 	d.podClient = clientset.CoreV1().Pods(corev1.NamespaceDefault)
 }
@@ -92,7 +92,7 @@ func newDeployer() *Deployer {
 	return &d
 }
 
-func (d Deployer) createNewCR(name string, img string) {
+func (d *Deployer) createNewCR(name string, img string) {
 	// Create updated json config for the App
 	newApp := App{
 		ApiVersion: "app.custom.cr/v1alpha1",
@@ -133,63 +133,53 @@ func (d Deployer) createNewCR(name string, img string) {
 	defer resp.Body.Close()
 }
 
-func (d Deployer) exists(name string) (*corev1.Pod, bool) {
+func (d *Deployer) sendPatch(name string, img string) {
+	registryName := os.Getenv("REGISTRY")
+	img = registryName + img
 	updApp, err := d.podClient.Get(name, metav1.GetOptions{})
 	if err != nil {
-		fmt.Printf("Pod doesn't exist: %v.", err)
-		return nil, false
+		d.createNewCR(name, img)
+		fmt.Println("Created new CR")
+		return
 	}
-	return updApp, true
-}
-
-func (d Deployer) sendPatch(name string, img string) {
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		updApp, exists := d.exists(name)
-		if !exists {
-			d.createNewCR(name, img)
-			return nil
-		}
-		// Create HTTP client
-		httpcli := &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					RootCAs: d.caCertPool,
-				},
+	// Create HTTP client
+	httpcli := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: d.caCertPool,
 			},
-		}
+		},
+	}
 
-		// If exists, send patch to app cr
-		newApp := Patch{
-			Spec: AppSpec{
-				Image: img,
-			},
-		}
-		reqBody, err := json.Marshal(newApp)
-		if err != nil {
-			return fmt.Errorf("Failed to create cr spec: %v\n %w\n", newApp, err)
-		}
-		req, err := http.NewRequest("PATCH", d.address, bytes.NewReader(reqBody))
-		if err != nil {
-			return fmt.Errorf("Failed to send patch; %w\n", err)
-		}
+	// If exists, send patch to app cr
+	newApp := Patch{
+		Spec: AppSpec{
+			Image: img,
+		},
+	}
+	reqBody, err := json.Marshal(newApp)
+	if err != nil {
+		log.Fatal(fmt.Errorf("Failed to create cr spec: %v\n %w\n", newApp, err))
+	}
+	req, err := http.NewRequest("PATCH", d.address, bytes.NewReader(reqBody))
+	if err != nil {
+		log.Fatal(fmt.Errorf("Failed to send patch; %w\n", err))
+	}
 
-		req.Header.Add("Content-Type", "application/merge-patch+json")
-		req.Header.Add("Accept", "application/json")
-		req.Header.Add("Authorization", d.token)
-		resp, err := httpcli.Do(req)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		defer resp.Body.Close()
+	req.Header.Add("Content-Type", "application/merge-patch+json")
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", d.token)
+	resp, err := httpcli.Do(req)
+	if err != nil {
+		log.Fatal(fmt.Errorf("Patch failed: %v", err))
+	}
+	defer resp.Body.Close()
 
-		// Update pod
-		updApp.Spec.Containers[0].Image = img
-		_, updateErr := d.podClient.Update(updApp)
-		return updateErr
-	})
-	if retryErr != nil {
-		log.Fatal(fmt.Errorf("Update failed: %v", retryErr))
+	// Update pod
+	updApp.Spec.Containers[0].Image = img
+	_, updErr := d.podClient.Update(updApp)
+	if updErr != nil {
+		log.Fatal(fmt.Errorf("Update failed: %v", updErr))
 	}
 }
 
@@ -209,12 +199,13 @@ func rollout(c *gin.Context) {
 	for index, event := range envelope.Events {
 		if event.Action == notifications.EventActionPush {
 			fmt.Printf("Processing event %d of %d\n", index+1, len(envelope.Events))
-			if (event.Target.Tag != "") && (event.Target.Repository != "charon-operator") && (event.Target.Repository != "deployer") {
-				img := event.Target.Repository + ":" + event.Target.Tag
+			name := event.Target.Repository
+			if (event.Target.Tag != "") && (!strings.Contains(name, "charon-")) {
+				img := name + ":" + event.Target.Tag
 				fmt.Println(img)
 				d := newDeployer()
-				d.address = address + event.Target.Repository
-				d.sendPatch(event.Target.Repository, img)
+				d.address = address + name
+				d.sendPatch(name, img)
 			}
 		}
 	}
@@ -242,7 +233,8 @@ func rollback(c *gin.Context) {
 	d := newDeployer()
 	// Find out, which version is deployed
 
-	d.sendPatch(anom.Image, anom.Image)
+	imgName := os.Getenv("REGISTRY") + anom.Image
+	d.sendPatch(imgName, imgName)
 	c.JSON(200, 0)
 }
 
