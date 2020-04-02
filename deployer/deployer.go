@@ -189,7 +189,7 @@ type TagsList struct {
 }
 
 func (d *Deployer) getPreviousVersion(name string) string {
-	registryAddr := os.Getenv("REGISTRY") + "v2/" + name + "/tags/list"
+	registryAddr := "http://" + os.Getenv("REGISTRY") + "v2/" + name + "/tags/list"
 	resp, err := http.Get(registryAddr)
 	if err != nil {
 		err = fmt.Errorf("Failed to get image tags: %w", err)
