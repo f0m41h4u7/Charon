@@ -35,7 +35,7 @@ func MinMax(array []float64) (float64, float64) {
 	return min, max
 }
 
-func getMetrics() ([]float64, string) {
+func getMetrics(metricName string) ([]float64, string) {
 	client, err := api.NewClient(api.Config{
 		Address: os.Getenv("PROMETHEUS_HOST"),
 	})
@@ -47,11 +47,11 @@ func getMetrics() ([]float64, string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	r := v1.Range{
-		Start: time.Now().Add(-100*time.Hour),
+		Start: time.Now().Add(-100 * time.Hour),
 		End:   time.Now(),
 		Step:  time.Minute,
 	}
-	result, warnings, err := v1api.QueryRange(ctx, "testMetrics{instance=\"test-app:1337\",job=\"test-app\"}", r)
+	result, warnings, err := v1api.QueryRange(ctx, metricName, r)
 	if err != nil {
 		log.Fatal(fmt.Errorf("Error querying Prometheus: %w\n", err))
 	}
@@ -69,8 +69,8 @@ func getMetrics() ([]float64, string) {
 	return vals, "test-app"
 }
 
-func anomalyDetect() {
-	metrics, image := getMetrics()
+func anomalyDetect(metricName string) {
+	metrics, image := getMetrics(metricName)
 
 	min, max := MinMax(metrics)
 	conf := &anomalyzer.AnomalyzerConf{
@@ -88,7 +88,7 @@ func anomalyDetect() {
 	}
 
 	probability := anom.Eval()
-	log.Printf("Probability: %f\n", probability)
+	log.Printf("Metric: %s; Probability: %f\n", metricName, probability)
 	if probability > 0.85 {
 		alarm := Alarm{
 			Image: image,
@@ -99,7 +99,7 @@ func anomalyDetect() {
 			log.Fatal(err)
 		}
 
-		log.Printf("ANOMALY: %f\n", probability)
+		log.Printf("ANOMALY in metric %s: %f\n", metricName, probability)
 		httpcli := &http.Client{}
 		req, err := http.NewRequest("POST", "http://charon-deployer:31337/rollback", bytes.NewReader(reqBody))
 		if err != nil {
@@ -122,6 +122,8 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 	for {
-		anomalyDetect()
+		anomalyDetect("testMetrics0{instance=\"test-app:1337\",job=\"test-app\"}")
+		anomalyDetect("testMetrics1{instance=\"test-app:1337\",job=\"test-app\"}")
+		anomalyDetect("testMetrics2{instance=\"test-app:1337\",job=\"test-app\"}")
 	}
 }
