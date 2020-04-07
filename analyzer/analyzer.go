@@ -17,6 +17,8 @@ import (
 	"github.com/prometheus/common/model"
 )
 
+var currentAnom = make(map[string]float64)
+
 type Alarm struct {
 	Image string `json:"image"`
 }
@@ -69,7 +71,15 @@ func getMetrics(metricName string) ([]float64, string) {
 	return vals, "test-app"
 }
 
-func anomalyDetect(metricName string) {
+func average() float64 {
+	var res float64
+	for _,val := range currentAnom {
+		res += val
+	}
+	return res/float64(len(currentAnom))
+}
+
+func anomalyDetect(metricName string) bool {
 	metrics, image := getMetrics(metricName)
 
 	min, max := MinMax(metrics)
@@ -89,7 +99,8 @@ func anomalyDetect(metricName string) {
 
 	probability := anom.Eval()
 	log.Printf("Metric: %s; Probability: %f\n", metricName, probability)
-	if probability > 0.85 {
+	currentAnom[metricName] = probability
+	if average() > 0.85 {
 		alarm := Alarm{
 			Image: image,
 		}
@@ -99,7 +110,7 @@ func anomalyDetect(metricName string) {
 			log.Fatal(err)
 		}
 
-		log.Printf("ANOMALY in metric %s: %f\n", metricName, probability)
+		log.Printf("ANOMALY! %f\n", probability)
 		httpcli := &http.Client{}
 		req, err := http.NewRequest("POST", "http://charon-deployer:31337/rollback", bytes.NewReader(reqBody))
 		if err != nil {
@@ -113,17 +124,26 @@ func anomalyDetect(metricName string) {
 		}
 		defer resp.Body.Close()
 		log.Printf("Sent rollback request!")
+		return true
 	}
+	return false
 }
 
 func main() {
+	currentAnom["testMetrics0{instance=\"test-app:1337\",job=\"test-app\"}"] = float64(0)
+	currentAnom["testMetrics1{instance=\"test-app:1337\",job=\"test-app\"}"] = float64(0)
+	currentAnom["testMetrics2{instance=\"test-app:1337\",job=\"test-app\"}"] = float64(0)
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 	for {
-		anomalyDetect("testMetrics0{instance=\"test-app:1337\",job=\"test-app\"}")
-		anomalyDetect("testMetrics1{instance=\"test-app:1337\",job=\"test-app\"}")
-		anomalyDetect("testMetrics2{instance=\"test-app:1337\",job=\"test-app\"}")
+		anom0 := anomalyDetect("testMetrics0{instance=\"test-app:1337\",job=\"test-app\"}")
+		anom1 := anomalyDetect("testMetrics1{instance=\"test-app:1337\",job=\"test-app\"}")
+		anom2 := anomalyDetect("testMetrics2{instance=\"test-app:1337\",job=\"test-app\"}")
+		if anom0 || anom1 || anom2 {
+			time.Sleep(5*time.Minute)
+		}
 	}
 }

@@ -11,6 +11,11 @@ Smart version managing system for K8s
 * Analyzes pod metrics
 * If an anomaly was detected, rolls the pod back to a stable version
 
+## Install
+
+* Create a .env file providing Prometheus and Docker registry URLs (See [.env.example](.env.example))
+* Run `setup.sh`
+
 ## Charon architecture
 
 ![alt text](https://raw.githubusercontent.com/f0m41h4u7/Charon/master/charon-project-scheme.png)

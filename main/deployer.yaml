@@ -4,8 +4,8 @@ metadata:
   name: charon-deployer
 spec:
   analyzer: charon-analyzer
-  deployerImage: charon-registry:5000/charon-deployer
-  analyzerImage: charon-registry:5000/charon-analyzer
+  deployerImage: f0m41h4u7/charon-deployer
+  analyzerImage: f0m41h4u7/charon-analyzer
   serviceAccountName: charon-deployer-serv-acc
   mountPath: /var/run/secrets
   tokenName: deployer-secret

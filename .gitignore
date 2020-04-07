@@ -1,14 +1,11 @@
 *backup*
 *.json
 *.sh
-registry*
-deployer/*.sh
+main/*.sh
 reset.sh
-monitoring/*.sh
-deployer/pkg/
 analyzer/*.sh
 *pycache*
-*.env*
+*.env
 analyzer/.*
 .git-template*
 .pre-commit-config.yaml
