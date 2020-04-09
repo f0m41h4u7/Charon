@@ -226,7 +226,7 @@ func rollout(c *gin.Context) {
 		if event.Action == notifications.EventActionPush {
 			fmt.Printf("Processing event %d of %d\n", index+1, len(envelope.Events))
 			name := event.Target.Repository
-			if (event.Target.Tag != "") && (!strings.Contains(name, "charon-")) {
+			if event.Target.Tag != "" {
 				img := name + ":" + event.Target.Tag
 				fmt.Println(img)
 				d := newDeployer()
