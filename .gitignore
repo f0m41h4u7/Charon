@@ -1,9 +1,10 @@
 *backup*
 *.json
-*.sh
 main/*.sh
 reset.sh
 analyzer/*.sh
+main/*.sh
+test-deployment/*.sh
 *pycache*
 *.env
 analyzer/.*
