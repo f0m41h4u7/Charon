@@ -11,3 +11,4 @@ analyzer/.*
 .git-template*
 .pre-commit-config.yaml
 .talismanrc
+*.~lock*
