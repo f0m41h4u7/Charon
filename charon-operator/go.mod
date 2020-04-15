@@ -3,12 +3,13 @@ module charon-operator
 go 1.13
 
 require (
-	github.com/operator-framework/operator-sdk v0.16.1-0.20200331094118-c97e53b9e138
+	github.com/Azure/go-autorest v12.2.0+incompatible
+	github.com/operator-framework/operator-sdk v0.16.1-0.20200415104406-04fdfffa8df4
 	github.com/spf13/pflag v1.0.5
-	k8s.io/api v0.0.0
-	k8s.io/apimachinery v0.0.0
+	k8s.io/api v0.17.4
+	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v12.0.0+incompatible
-	sigs.k8s.io/controller-runtime v0.4.0
+	sigs.k8s.io/controller-runtime v0.5.2
 )
 
 // Pinned to kubernetes-1.16.2
