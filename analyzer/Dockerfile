@@ -6,4 +6,4 @@ COPY		.env /home
 COPY		go.mod /home
 COPY		go.sum /home
 WORKDIR		/home
-ENTRYPOINT	["go", "run", "analyzer.go"]
+ENTRYPOINT	["go", "run", "."]
