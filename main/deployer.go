@@ -10,7 +10,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/docker/distribution/notifications"
 	"github.com/gin-gonic/gin"
@@ -262,7 +261,7 @@ func rollback(c *gin.Context) {
 	targetVersion := d.getPreviousVersion(anom.Image)
 
 	// Patch CR and rollback pod
-	d.sendPatch(anom.Image, anom.Image + ":" + targetVersion)
+	d.sendPatch(anom.Image, anom.Image+":"+targetVersion)
 	c.JSON(200, 0)
 }
 
