@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -13,42 +14,35 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func getTime(delta time.Duration) string {
-	time := time.Now().Add(delta).UnixNano() / int64(time.Millisecond)
-	return strconv.FormatInt(time, 10)
-}
-
-type promValue struct {
-	Timestamp float64
-	Value     string
-}
-type promMetric struct {
-	Name     string `json:"name"`
-	Instance string `json:"instance"`
-	Job      string `json:"job"`
-}
-type promResult struct {
-	Metric promMetric  `json:"metric"`
-	Value  []promValue `json:"value"`
-}
-
 type promResponse struct {
-	Status string   `json:"status"`
-	Data   promData `json:"data"`
+	Status string `json:"status"`
+	Data   struct {
+		ResultType string `json:"resultType"`
+		Result     []struct {
+			Metric struct {
+				Name     string `json:"__name__"`
+				Instance string `json:"instance"`
+				Job      string `json:"job"`
+			} `json:"metric"`
+			Values [][]interface{} `json:"values"`
+		} `json:"result"`
+	} `json:"data"`
 }
 
-type promData struct {
-	ResultType string       `json:"resultType"`
-	Result     []promResult `json:"result"`
+func getTime(delta time.Duration) string {
+	return strconv.FormatInt(time.Now().Add(delta).Unix(), 10)
 }
 
-func queryMetric(metricName string) ([]promValue, string) {
+func queryMetric(metricName string) ([][]interface{}, string) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 	promHost := os.Getenv("PROMETHEUS_HOST")
-	addr := promHost + "/api/v1/query_range?query=" + metricName + "&start=" + getTime(-100*time.Hour) + "&end=" + getTime(0) + "&step=" + time.Minute.String()
+	params := metricName + "&start=" + getTime(-100*time.Hour) + "&end=" + getTime(0) + "&step=60s"
+	paramsUrlEncoded := &url.URL{Path: params}
+	addr := promHost + "/api/v1/query_range?query=" + paramsUrlEncoded.String()
+
 	resp, err := http.Get(addr)
 	if err != nil {
 		log.Fatal(fmt.Errorf("Failed to connect to Prometheus: %w\n", err))
@@ -63,8 +57,8 @@ func queryMetric(metricName string) ([]promValue, string) {
 	if err != nil {
 		log.Fatal(fmt.Errorf("Failed to parse json (queryMetric)\n Request: %s\n Body: %s\n Error: %w\n", addr, respBytes, err))
 	}
-	fmt.Printf("%v", mt.Data.Result)
-	return mt.Data.Result[0].Value, mt.Data.Result[0].Metric.Instance
+
+	return mt.Data.Result[0].Values, mt.Data.Result[0].Metric.Instance
 }
 
 func getMetricNames() []string {

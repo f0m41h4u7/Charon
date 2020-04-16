@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -84,7 +85,8 @@ func anomalyDetect(metricName string) bool {
 	query, image := queryMetric(metricName)
 	var metrics []float64
 	for _, q := range query {
-		mt, _ := strconv.ParseFloat(q.Value, 64)
+		tmp := strings.Split(q[1].(string), `"`)
+		mt, _ := strconv.ParseFloat(tmp[0], 64)
 		metrics = append(metrics, mt)
 	}
 
@@ -137,7 +139,6 @@ func anomalyDetect(metricName string) bool {
 
 func main() {
 	metrics := getMetricNames()
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
