@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -73,14 +74,19 @@ func getMetrics(metricName string) ([]float64, string) {
 
 func average() float64 {
 	var res float64
-	for _,val := range currentAnom {
+	for _, val := range currentAnom {
 		res += val
 	}
-	return res/float64(len(currentAnom))
+	return res / float64(len(currentAnom))
 }
 
 func anomalyDetect(metricName string) bool {
-	metrics, image := getMetrics(metricName)
+	query, image := queryMetric(metricName)
+	var metrics []float64
+	for _, q := range query {
+		mt, _ := strconv.ParseFloat(q.Value, 64)
+		metrics = append(metrics, mt)
+	}
 
 	min, max := MinMax(metrics)
 	conf := &anomalyzer.AnomalyzerConf{
@@ -130,20 +136,22 @@ func anomalyDetect(metricName string) bool {
 }
 
 func main() {
-	currentAnom["testMetrics0{instance=\"test-app:1337\",job=\"test-app\"}"] = float64(0)
-	currentAnom["testMetrics1{instance=\"test-app:1337\",job=\"test-app\"}"] = float64(0)
-	currentAnom["testMetrics2{instance=\"test-app:1337\",job=\"test-app\"}"] = float64(0)
+	metrics := getMetricNames()
 
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 	for {
-		anom0 := anomalyDetect("testMetrics0{instance=\"test-app:1337\",job=\"test-app\"}")
-		anom1 := anomalyDetect("testMetrics1{instance=\"test-app:1337\",job=\"test-app\"}")
-		anom2 := anomalyDetect("testMetrics2{instance=\"test-app:1337\",job=\"test-app\"}")
-		if anom0 || anom1 || anom2 {
-			time.Sleep(5*time.Minute)
+		anom := false
+		for _, mt := range metrics {
+			anom = anomalyDetect(mt)
+			if anom {
+				break
+			}
+		}
+		if anom {
+			time.Sleep(5 * time.Minute)
 		}
 	}
 }
