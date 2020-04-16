@@ -1,6 +1,6 @@
 module github.com/f0m41h4u7/Charon
 
-go 1.13
+go 1.14
 
 require (
 	github.com/docker/distribution v2.7.1+incompatible
