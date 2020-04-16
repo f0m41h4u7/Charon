@@ -2,6 +2,7 @@ package deployer
 
 import (
 	"context"
+	"fmt"
 
 	deployerv1alpha1 "charon-operator/pkg/apis/deployer/v1alpha1"
 
@@ -291,7 +292,7 @@ func createPod(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 	labels := map[string]string{
 		"name": cr.Name,
 	}
-	return &corev1.Pod{
+	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.Name,
 			Namespace: cr.Namespace,
@@ -311,4 +312,6 @@ func createPod(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 			},
 		},
 	}
+	fmt.Printf("%v", pod)
+	return pod
 }

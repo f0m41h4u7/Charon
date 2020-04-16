@@ -2,6 +2,7 @@ apiVersion: deployer.charon.cr/v1alpha1
 kind: Deployer
 metadata:
   name: charon-deployer
+  namespace: default
 spec:
   analyzer: charon-analyzer
   deployerImage: f0m41h4u7/charon-deployer
