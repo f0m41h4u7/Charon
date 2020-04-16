@@ -7,8 +7,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
+
+	"github.com/joho/godotenv"
 )
+
+func getTime(delta time.Duration) string {
+	time := time.Now().Add(delta).UnixNano() / int64(time.Millisecond)
+	return strconv.FormatInt(time, 10)
+}
 
 type promValue struct {
 	Timestamp float64
@@ -25,8 +33,8 @@ type promResult struct {
 }
 
 type promResponse struct {
-	Status string      `json:"status"`
-	Data   interface{} `json:"data"`
+	Status string   `json:"status"`
+	Data   promData `json:"data"`
 }
 
 type promData struct {
@@ -34,44 +42,57 @@ type promData struct {
 	Result     []promResult `json:"result"`
 }
 
-//curl -g 'http://167.172.137.177:30329/api/v1/query?' --data-urlencode 'query=scrape_duration_seconds'
-//{"status":"success","data":{"resultType":"vector","result":[{"metric":{"__name__":"scrape_duration_seconds","instance":"test-app:1337","job":"test-app"},"value":[1586984270.136,"5.000423151"]}]}}
-
 func queryMetric(metricName string) ([]promValue, string) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	promHost := os.Getenv("PROMETHEUS_HOST")
-	resp, err := http.Get(promHost + "/api/v1/query_range?query=" + metricName + "&start=" + time.Now().Add(-100*time.Hour).String() + "&end=" + time.Now().String() + "&step=" + time.Minute.String())
+	addr := promHost + "/api/v1/query_range?query=" + metricName + "&start=" + getTime(-100*time.Hour) + "&end=" + getTime(0) + "&step=" + time.Minute.String()
+	resp, err := http.Get(addr)
 	if err != nil {
 		log.Fatal(fmt.Errorf("Failed to connect to Prometheus: %w\n", err))
 	}
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("Failed to read response body (queryMetric): %w\n", err))
 	}
 
 	var mt promResponse
 	err = json.Unmarshal(respBytes, &mt)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("Failed to parse json (queryMetric)\n Request: %s\n Body: %s\n Error: %w\n", addr, respBytes, err))
 	}
-	return mt.Data.(promData).Result[0].Value, mt.Data.(promData).Result[0].Metric.Instance
+	fmt.Printf("%v", mt.Data.Result)
+	return mt.Data.Result[0].Value, mt.Data.Result[0].Metric.Instance
 }
 
 func getMetricNames() []string {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	promHost := os.Getenv("PROMETHEUS_HOST")
-	resp, err := http.Get(promHost + "/api/v1/label/__name__/values")
+	addr := promHost + "/api/v1/label/__name__/values"
+	resp, err := http.Get(addr)
 	if err != nil {
 		log.Fatal(fmt.Errorf("Failed to connect to Prometheus: %w\n", err))
 	}
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("Failed to read response body (getMetricNames): %w\n", err))
 	}
 
-	var mt promResponse
+	type response struct {
+		Status string   `json:"status"`
+		Data   []string `json:"data"`
+	}
+
+	var mt response
 	err = json.Unmarshal(respBytes, &mt)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("Failed to parse json (getMetricNames): %w\n", err))
 	}
 
-	return mt.Data.([]string)
+	return mt.Data
 }
