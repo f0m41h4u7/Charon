@@ -16,6 +16,5 @@ kind: ConfigMap
 metadata:
   name: env-configmap
 data:
-  PROMETHEUS_HOST: http://prometheus-service:9090
-  REGISTRY: charon-registry:5000/
-
+  PROMETHEUS_HOST: # Put your Prometheus URL here
+  REGISTRY: # Put your registry name here
