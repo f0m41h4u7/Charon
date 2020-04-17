@@ -21,5 +21,5 @@
 
 ## How to use
 
-* Create a .env file providing Prometheus and Docker registry URLs (See [.env.example](.env.example))
+* Provide Prometheus URL and Docker Registry name in `deployer/deployer.yaml`
 * Run `setup.sh`
