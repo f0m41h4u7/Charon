@@ -13,7 +13,6 @@ import (
 
 	"github.com/docker/distribution/notifications"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -71,13 +70,13 @@ func (d *Deployer) createPodClient() {
 	// Create the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		log.Fatal(fmt.Errorf("Failed to create in-cluster config: %w", err.Error()))
+		log.Fatal(fmt.Errorf("Failed to create in-cluster config: %w", err))
 	}
 
 	// Create clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Fatal(fmt.Errorf("Failed to create clientset: %w", err.Error()))
+		log.Fatal(fmt.Errorf("Failed to create clientset: %w", err))
 	}
 	d.podClient = clientset.CoreV1().Pods(corev1.NamespaceDefault)
 }
@@ -266,10 +265,6 @@ func rollback(c *gin.Context) {
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 	address = "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/app.custom.cr/v1alpha1/namespaces/default/apps/"
 
 	//gin.SetMode(gin.ReleaseMode)

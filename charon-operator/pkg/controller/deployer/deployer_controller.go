@@ -304,10 +304,30 @@ func createPod(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 				{
 					Name:  cr.Name,
 					Image: cr.Spec.DeployerImage,
+					EnvFrom: []corev1.EnvFromSource{
+						{
+							ConfigMapRef: &corev1.ConfigMapEnvSource{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "env-configmap",
+								},
+								Optional: nil,
+							},
+						},
+					},
 				},
 				{
 					Name:  cr.Spec.Analyzer,
 					Image: cr.Spec.AnalyzerImage,
+					EnvFrom: []corev1.EnvFromSource{
+						{
+							ConfigMapRef: &corev1.ConfigMapEnvSource{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "env-configmap",
+								},
+								Optional: nil,
+							},
+						},
+					},
 				},
 			},
 		},

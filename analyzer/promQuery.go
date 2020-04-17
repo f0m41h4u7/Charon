@@ -10,8 +10,6 @@ import (
 	"os"
 	"strconv"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 type promResponse struct {
@@ -34,10 +32,6 @@ func getTime(delta time.Duration) string {
 }
 
 func queryMetric(metricName string) ([][]interface{}, string) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 	promHost := os.Getenv("PROMETHEUS_HOST")
 	params := metricName + "&start=" + getTime(-100*time.Hour) + "&end=" + getTime(0) + "&step=60s"
 	paramsUrlEncoded := &url.URL{Path: params}
@@ -62,10 +56,6 @@ func queryMetric(metricName string) ([][]interface{}, string) {
 }
 
 func getMetricNames() []string {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 	promHost := os.Getenv("PROMETHEUS_HOST")
 	addr := promHost + "/api/v1/label/__name__/values"
 	resp, err := http.Get(addr)

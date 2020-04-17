@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/lytics/anomalyzer"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
@@ -139,10 +138,6 @@ func anomalyDetect(metricName string) bool {
 
 func main() {
 	metrics := getMetricNames()
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 	for {
 		anom := false
 		for _, mt := range metrics {
