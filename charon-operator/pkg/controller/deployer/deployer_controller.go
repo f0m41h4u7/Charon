@@ -323,7 +323,6 @@ func createPod(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "env-configmap",
 								},
-								Optional: nil,
 							},
 						},
 					},
