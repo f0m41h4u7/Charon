@@ -5,7 +5,6 @@
 <p align="center">
 	<a href="https://github.com/f0m41h4u7/Charon/blob/master/main/go.mod" rel="nofollow"><img alt="Go" src="https://img.shields.io/github/go-mod/go-version/f0m41h4u7/Charon?filename=deployer%2Fgo.mod"></a>
 	<a href="https://goreportcard.com/report/github.com/f0m41h4u7/Charon" rel="nofollow"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/f0m41h4u7/Charon"></a>
-	<a href="https://www.gnu.org/licenses/gpl-3.0" rel="nofollow"><img alt="License: GPL v3" src="https://img.shields.io/github/license/f0m41h4u7/Charon"></a>
 </p>
 
 ## How does it work
