@@ -2,20 +2,15 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/lytics/anomalyzer"
-	"github.com/prometheus/client_golang/api"
-	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
-	"github.com/prometheus/common/model"
 )
 
 var currentAnom = make(map[string]float64)
@@ -36,40 +31,6 @@ func MinMax(array []float64) (float64, float64) {
 		}
 	}
 	return min, max
-}
-
-func getMetrics(metricName string) ([]float64, string) {
-	client, err := api.NewClient(api.Config{
-		Address: os.Getenv("PROMETHEUS_HOST"),
-	})
-	if err != nil {
-		log.Fatal(fmt.Errorf("Error creating client: %w\n", err))
-	}
-
-	v1api := v1.NewAPI(client)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	r := v1.Range{
-		Start: time.Now().Add(-100 * time.Hour),
-		End:   time.Now(),
-		Step:  time.Minute,
-	}
-	result, warnings, err := v1api.QueryRange(ctx, metricName, r)
-	if err != nil {
-		log.Fatal(fmt.Errorf("Error querying Prometheus: %w\n", err))
-	}
-	if len(warnings) > 0 {
-		fmt.Printf("Warnings: %v\n", warnings)
-	}
-
-	log.Printf("Connected to Prometheus... Querying metrics...\n")
-	pairs := result.(model.Matrix)[0].Values
-	var vals []float64
-	for _, p := range pairs {
-		vals = append(vals, float64(p.Value))
-	}
-
-	return vals, "test-app"
 }
 
 func average() float64 {
