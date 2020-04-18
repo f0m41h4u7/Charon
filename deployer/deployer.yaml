@@ -10,12 +10,3 @@ spec:
   serviceAccountName: charon-deployer-serv-acc
   mountPath: /var/run/secrets
   tokenName: deployer-secret
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: env-configmap
-data:
-  PROMETHEUS_HOST: http://prometheus-service:9090
-  REGISTRY: charon-registry:5000/
-

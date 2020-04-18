@@ -1,5 +1,6 @@
 #!/bin/bash
 
+kubectl apply -f deployer-configmap.yaml
 kubectl apply -f charon-operator/deploy/service_account.yaml
 kubectl apply -f charon-operator/deploy/role.yaml
 kubectl apply -f charon-operator/deploy/role_binding.yaml

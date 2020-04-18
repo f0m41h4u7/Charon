@@ -190,8 +190,6 @@ func createService(cr *deployerv1alpha1.Deployer) *corev1.Service {
 	labels := map[string]string{
 		"name": cr.Name,
 	}
-	var tport intstr.IntOrString
-	tport.IntVal = 31337
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.Name,
@@ -199,12 +197,12 @@ func createService(cr *deployerv1alpha1.Deployer) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: labels,
-			Type:     "ClusterIP",
+			Type:     "NodePort",
 			Ports: []corev1.ServicePort{
 				{
 					Protocol:   "TCP",
 					Port:       31337,
-					TargetPort: tport,
+					NodePort:   31337,
 				},
 			},
 		},
@@ -300,31 +298,29 @@ func createPod(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 		},
 		Spec: corev1.PodSpec{
 			ServiceAccountName: "charon-deployer-sa",
-			Containers: []corev1.Container{
+			Containers:         []corev1.Container{
 				{
-					Name:  cr.Name,
-					Image: cr.Spec.DeployerImage,
+					Name:    cr.Name,
+					Image:   cr.Spec.DeployerImage,
 					EnvFrom: []corev1.EnvFromSource{
 						{
 							ConfigMapRef: &corev1.ConfigMapEnvSource{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "env-configmap",
 								},
-								Optional: nil,
 							},
 						},
 					},
 				},
 				{
-					Name:  cr.Spec.Analyzer,
-					Image: cr.Spec.AnalyzerImage,
+					Name:    cr.Spec.Analyzer,
+					Image:   cr.Spec.AnalyzerImage,
 					EnvFrom: []corev1.EnvFromSource{
 						{
 							ConfigMapRef: &corev1.ConfigMapEnvSource{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "env-configmap",
 								},
-								Optional: nil,
 							},
 						},
 					},
