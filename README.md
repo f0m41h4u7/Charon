@@ -22,5 +22,5 @@
 ## How to use
 
 * Provide Prometheus URL and Docker Registry name in `deployer-configmap.yaml`
-* Configure your Docker Registry notification endpoint at your-URL:31337/rollout
+* Configure your Docker Registry notification endpoint at `http://your-url:31337/rollout`
 * Run `setup.sh`
