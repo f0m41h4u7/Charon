@@ -10,11 +10,3 @@ spec:
   serviceAccountName: charon-deployer-serv-acc
   mountPath: /var/run/secrets
   tokenName: deployer-secret
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: env-configmap
-data:
-  PROMETHEUS_HOST: # Put your Prometheus URL here
-  REGISTRY: # Put your registry name here

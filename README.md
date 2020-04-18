@@ -21,5 +21,5 @@
 
 ## How to use
 
-* Provide Prometheus URL and Docker Registry name in `deployer/deployer.yaml`
+* Provide Prometheus URL and Docker Registry name in `deployer-configmap.yaml`
 * Run `setup.sh`
