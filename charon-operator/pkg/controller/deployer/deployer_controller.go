@@ -21,7 +21,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	rbac "k8s.io/api/rbac/v1beta1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -200,9 +199,9 @@ func createService(cr *deployerv1alpha1.Deployer) *corev1.Service {
 			Type:     "NodePort",
 			Ports: []corev1.ServicePort{
 				{
-					Protocol:   "TCP",
-					Port:       31337,
-					NodePort:   31337,
+					Protocol: "TCP",
+					Port:     31337,
+					NodePort: 31337,
 				},
 			},
 		},
@@ -238,7 +237,7 @@ func createRole(cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *rbac.Role 
 		},
 	}
 
-	controllerutil.SetControllerReference(cr, role, r.scheme)
+	_ = controllerutil.SetControllerReference(cr, role, r.scheme)
 	return role
 }
 
@@ -266,7 +265,7 @@ func createRB(cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *rbac.RoleBin
 		},
 	}
 
-	controllerutil.SetControllerReference(cr, rb, r.scheme)
+	_ = controllerutil.SetControllerReference(cr, rb, r.scheme)
 	return rb
 }
 
@@ -282,7 +281,7 @@ func createSA(cr *deployerv1alpha1.Deployer, r *ReconcileDeployer) *corev1.Servi
 		},
 	}
 
-	controllerutil.SetControllerReference(cr, sa, r.scheme)
+	_ = controllerutil.SetControllerReference(cr, sa, r.scheme)
 	return sa
 }
 
@@ -298,10 +297,10 @@ func createPod(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 		},
 		Spec: corev1.PodSpec{
 			ServiceAccountName: "charon-deployer-sa",
-			Containers:         []corev1.Container{
+			Containers: []corev1.Container{
 				{
-					Name:    cr.Name,
-					Image:   cr.Spec.DeployerImage,
+					Name:  cr.Name,
+					Image: cr.Spec.DeployerImage,
 					EnvFrom: []corev1.EnvFromSource{
 						{
 							ConfigMapRef: &corev1.ConfigMapEnvSource{
@@ -313,8 +312,8 @@ func createPod(cr *deployerv1alpha1.Deployer) *corev1.Pod {
 					},
 				},
 				{
-					Name:    cr.Spec.Analyzer,
-					Image:   cr.Spec.AnalyzerImage,
+					Name:  cr.Spec.Analyzer,
+					Image: cr.Spec.AnalyzerImage,
 					EnvFrom: []corev1.EnvFromSource{
 						{
 							ConfigMapRef: &corev1.ConfigMapEnvSource{

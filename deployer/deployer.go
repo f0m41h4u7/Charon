@@ -272,7 +272,7 @@ func main() {
 
 	r.POST("/rollout", rollout)
 	r.POST("/rollback", rollback)
-	err = r.Run(":31337")
+	err := r.Run(":31337")
 	if err != nil {
 		log.Fatal(err)
 	}
