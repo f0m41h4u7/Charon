@@ -8,7 +8,7 @@
 	<a href="https://github.com/f0m41h4u7/Charon/LICENSE" rel="nofollow"><img alt="MIT License" src="https://img.shields.io/github/license/f0m41h4u7/Charon"></a>
 </p>
 
-## How does it work
+## How it works
 
 * Automatically deploys a pod from image pushed to docker registry
 * Manages pod lifecycle
@@ -19,7 +19,7 @@
 
 ![alt text](https://raw.githubusercontent.com/f0m41h4u7/Charon/master/files/charon-project-scheme.png)
 
-## How to use
+## Usage
 
 * Provide Prometheus URL and Docker Registry name in `deployer-configmap.yaml`
 * Configure your Docker Registry notification endpoint at `http://your-url:31337/rollout`
