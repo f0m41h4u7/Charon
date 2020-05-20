@@ -7,6 +7,3 @@ spec:
   analyzer: charon-analyzer
   deployerImage: docker.pkg.github.com/f0m41h4u7/charon/deployer
   analyzerImage: docker.pkg.github.com/f0m41h4u7/charon/analyzer
-  serviceAccountName: charon-deployer-serv-acc
-  mountPath: /var/run/secrets
-  tokenName: deployer-secret
