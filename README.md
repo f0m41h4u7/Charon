@@ -25,4 +25,3 @@
 * Configure your Docker Registry notification endpoint to send alerts to `http://your-url:31337/rollout`
 * Run `make` to deploy Charon
 * Run `make build` to build Charon from source
-* 
