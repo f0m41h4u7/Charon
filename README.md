@@ -22,5 +22,7 @@
 ## Usage
 
 * Provide Prometheus URL and Docker Registry name in `deployer-configmap.yaml`
-* Configure your Docker Registry notification endpoint at `http://your-url:31337/rollout`
-* Run `setup.sh`
+* Configure your Docker Registry notification endpoint to send alerts to `http://your-url:31337/rollout`
+* Run `make` to deploy Charon
+* Run `make build` to build Charon from source
+* 
