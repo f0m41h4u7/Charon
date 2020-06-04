@@ -2,10 +2,9 @@ package app
 
 import (
 	"context"
+	"fmt"
 
 	appv1alpha1 "charon-operator/pkg/apis/app/v1alpha1"
-
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
