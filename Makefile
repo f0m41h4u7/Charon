@@ -40,4 +40,4 @@ build:
 		operator-sdk build $(OP_IMG) && \
 		rm -rf build/_output"
 
-.PHONY: all build operator-build
+.PHONY: deploy lint build
