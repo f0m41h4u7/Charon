@@ -15,7 +15,7 @@ spec:
       serviceAccountName: charon-operator
       containers:
         - name: charon-operator
-          image: docker.pkg.github.com/f0m41h4u7/charon/operator
+          image: charon-operator
           command:
           - charon-operator
           imagePullPolicy: Always

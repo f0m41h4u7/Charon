@@ -22,5 +22,3 @@ WORKDIR	/go/src/
 
 VOLUME	[ "/sys/fs/cgroup", "/go/src" ]
 VOLUME	[ "operator-sdk", "/go/pkg"  ]
-
-ENTRYPOINT ["./build.sh"]
