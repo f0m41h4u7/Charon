@@ -11,13 +11,38 @@ import (
 	"net/http"
 	"os"
 
-	m "github.com/f0m41h4u7/Charon/models"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
+
+type metadata struct {
+	Name string `json:"name"`
+}
+
+type spec struct {
+	Image string `json:"image"`
+}
+
+// App CRD spec
+type app struct {
+	ApiVersion string   `json:"apiVersion"`
+	Kind       string   `json:"kind"`
+	Metadata   metadata `json:"metadata"`
+	Spec       spec     `json:"spec"`
+}
+
+// Patch request config
+type patch struct {
+	Spec spec `json:"spec"`
+}
+
+// List of available image tags
+type tagsList struct {
+	Name string
+	Tags []string
+}
 
 func (d *Deployer) setToken() {
 	read, err := ioutil.ReadFile(tokenPath)
@@ -53,13 +78,13 @@ func (d *Deployer) createPodClient() {
 
 func (d *Deployer) createNewCR(name string, img string) {
 	// Create updated json config for the App
-	newApp := m.App{
+	newApp := app{
 		ApiVersion: "app.custom.cr/v1alpha1",
 		Kind:       "App",
-		Metadata: m.Metadata{
+		Metadata: metadata{
 			Name: name,
 		},
-		Spec: m.Spec{
+		Spec: spec{
 			Image: img,
 		},
 	}
@@ -111,8 +136,8 @@ func (d *Deployer) SendPatch(name string, img string) {
 	}
 
 	// If exists, send patch to app cr
-	newApp := m.Patch{
-		Spec: m.Spec{
+	newApp := patch{
+		Spec: spec{
 			Image: img,
 		},
 	}
@@ -154,7 +179,7 @@ func (d *Deployer) GetPreviousVersion(name string) string {
 		log.Fatal(err)
 	}
 
-	var tl = m.TagsList{}
+	var tl = tagsList{}
 	err = json.Unmarshal(respBytes, &tl)
 	if err != nil {
 		err = fmt.Errorf("Failed to parse body: %s\n %w", resp.Body, err)

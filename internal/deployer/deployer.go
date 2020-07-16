@@ -2,6 +2,7 @@ package deployer
 
 import (
 	"crypto/x509"
+	"os"
 
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
@@ -9,7 +10,6 @@ import (
 var (
 	certPath  = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 	tokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-	Address   string
 )
 
 type Deployer struct {
@@ -21,7 +21,7 @@ type Deployer struct {
 
 func NewDeployer() *Deployer {
 	var d Deployer
-	d.Address = Address
+	d.Address = "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/  app.custom.cr/v1alpha1/namespaces/default/app  s/"
 	d.setToken()
 	d.setCertPool()
 	d.createPodClient()
