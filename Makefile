@@ -6,6 +6,7 @@ CWD := $(shell pwd)
 
 deploy:
 	kubectl apply -f deployer-configmap.yaml
+	kubectl apply -f operator/deploy/
 	kubectl apply -f deploy/
 
 lint:
@@ -13,11 +14,21 @@ lint:
 	golangci-lint run ./...
 
 build:
-	sed -i 's/docker.pkg.github.com\/f0m41h4u7\/charon\/deployer/$(D_IMG)/g' deploy/deployer.yaml
-	sed -i 's/docker.pkg.github.com\/f0m41h4u7\/charon\/analyzer/$(A_IMG)/g' deploy/deployer.yaml
-	docker build -t $(A_IMG) build/analyzer/
-	docker build -t $(D_IMG) build/deployer/
-	sed -i 's/docker.pkg.github.com\/f0m41h4u7\/charon\/operator/$(OP_IMG)/g' operator/deploy/operator.yaml
+	go build -o $(A_IMG) ./cmd/analyzer/main.go
+	go build -o $(D_IMG) ./cmd/deployer/main.go
+
+build-docker:
+	make analyzer
+	make deployer
+	make operator
+
+analyzer:
+	docker build -t $(A_IMG) --build-arg APP=analyzer -f build/Dockerfile .
+
+deployer:
+	docker build -t $(D_IMG) --build-arg APP=deployer -f build/Dockerfile .
+
+operator:
 	docker build -t operator operator/operator-sdk-docker/
 	cd operator/
 	docker run --rm \
@@ -29,4 +40,4 @@ build:
 		operator-sdk build $(OP_IMG) && \
 		rm -rf build/_output"
 
-.PHONY: deploy lint build
+.PHONY: deploy lint build analyzer deployer operator
