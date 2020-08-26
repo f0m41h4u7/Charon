@@ -1,4 +1,4 @@
-package main
+package analyzer
 
 import (
 	"bytes"
@@ -97,7 +97,7 @@ func anomalyDetect(metricName string) bool {
 	return false
 }
 
-func main() {
+func RunAnalyzer() {
 	metrics := getMetricNames()
 	for {
 		anom := false

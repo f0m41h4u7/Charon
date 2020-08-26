@@ -3,6 +3,8 @@
 </p>
 <h3 align="center">Smart version managing system for K8s</h3>
 <p align="center">
+  <a href="https://travis-ci.com/f0m41h4u7/Charon.svg?branch=master"
+  rel="nofollow"><img alt="Travis CI" src="https://travis-ci.com/f0m41h4u7/Charon.svg?branch=master"></a>
 	<a href="https://github.com/f0m41h4u7/Charon/blob/master/main/go.mod" rel="nofollow"><img alt="Go" src="https://img.shields.io/github/go-mod/go-version/f0m41h4u7/Charon?filename=deployer%2Fgo.mod"></a>
 	<a href="https://goreportcard.com/report/github.com/f0m41h4u7/Charon" rel="nofollow"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/f0m41h4u7/Charon"></a>
 	<a href="https://github.com/f0m41h4u7/Charon/LICENSE" rel="nofollow"><img alt="MIT License" src="https://img.shields.io/github/license/f0m41h4u7/Charon"></a>

@@ -7,10 +7,14 @@ import (
 	"log"
 
 	"github.com/docker/distribution/notifications"
-	dep "github.com/f0m41h4u7/Charon/deployer"
-	m "github.com/f0m41h4u7/Charon/models"
+	"github.com/f0m41h4u7/Charon/pkg/deployer"
 	"github.com/gin-gonic/gin"
 )
+
+// Alarm received from Analyzer, providing name of image with anomaly
+type alarm struct {
+	Image string `json:"image"`
+}
 
 // Handle Registry notifications
 func rollout(c *gin.Context) {
@@ -32,8 +36,8 @@ func rollout(c *gin.Context) {
 			if event.Target.Tag != "" {
 				img := name + ":" + event.Target.Tag
 				fmt.Println(img)
-				d := dep.NewDeployer()
-				d.Address = dep.Address + name
+				d := deployer.NewDeployer()
+				d.Address += name
 				d.SendPatch(name, img)
 			}
 		}
@@ -44,7 +48,7 @@ func rollout(c *gin.Context) {
 // Handle Analyzer notifications
 func rollback(c *gin.Context) {
 	body := c.Request.Body
-	var anom = m.Alarm{}
+	var anom = alarm{}
 	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		log.Fatal(err)
@@ -56,11 +60,23 @@ func rollback(c *gin.Context) {
 	}
 	log.Printf("Received a rollback request for image: %s\n", anom.Image)
 
-	d := dep.NewDeployer()
+	d := deployer.NewDeployer()
 	// Find out, which version is deployed
 	targetVersion := d.GetPreviousVersion(anom.Image)
 
 	// Patch CR and rollback pod
 	d.SendPatch(anom.Image, anom.Image+":"+targetVersion)
 	c.JSON(200, 0)
+}
+
+func main() {
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.Default()
+
+	r.POST("/rollout", rollout)
+	r.POST("/rollback", rollback)
+	err := r.Run(":31337")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
