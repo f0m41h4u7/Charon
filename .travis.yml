@@ -36,4 +36,4 @@ jobs:
 
     - stage: "Lint"
       name: "golangci-lint"
-      script: make lint
+      script: go install github.com/golangci/golangci-lint/cmd/golangci-lint && golangci-lint run ./...
