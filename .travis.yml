@@ -33,7 +33,3 @@ jobs:
     - stage: "Build"
       name: "docker"
       script: make build-docker
-
-    - stage: "Lint"
-      name: "golangci-lint"
-      script: go install github.com/golangci/golangci-lint/cmd/golangci-lint && golangci-lint run ./...
