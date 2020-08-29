@@ -5,9 +5,7 @@ OP_IMG := charon-operator
 CWD := $(shell pwd)
 
 deploy:
-	kubectl apply -f deployer-configmap.yaml
-	kubectl apply -f operator/deploy/
-	kubectl apply -f deploy/
+	./install.sh
 
 lint:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint
