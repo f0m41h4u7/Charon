@@ -2,6 +2,7 @@ package deployer
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -144,7 +145,7 @@ func (d *Deployer) createNewCR(name string, img string) {
 func (d *Deployer) SendPatch(name string, img string) {
 	registryName := os.Getenv("REGISTRY")
 	img = registryName + img
-	updApp, err := d.podClient.Get(name, metav1.GetOptions{})
+	updApp, err := d.podClient.Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		d.createNewCR(name, img)
 		fmt.Println("Created new CR")
@@ -185,7 +186,7 @@ func (d *Deployer) SendPatch(name string, img string) {
 
 	// Update pod
 	updApp.Spec.Containers[0].Image = img
-	_, updErr := d.podClient.Update(updApp)
+	_, updErr := d.podClient.Update(context.Background(), updApp, metav1.UpdateOptions{})
 	if updErr != nil {
 		log.Fatal(fmt.Errorf("Update failed: %v", updErr))
 	}
