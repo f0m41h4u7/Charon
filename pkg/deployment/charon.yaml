@@ -1,7 +1,7 @@
-apiVersion: deployer.charon.cr/v1alpha1
-kind: Deployer
+apiVersion: charon.charon.cr/v1alpha2
+kind: Charon
 metadata:
-  name: charon-deployer
+  name: charon
   namespace: charon
 spec:
   analyzer: charon-analyzer

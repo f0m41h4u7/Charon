@@ -1,4 +1,4 @@
-module gihub.com/f0m41h4u7/Charon/app
+module gihub.com/f0m41h4u7/Charon
 
 go 1.16
 
