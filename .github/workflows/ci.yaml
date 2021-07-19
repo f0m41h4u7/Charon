@@ -25,6 +25,7 @@ jobs:
     name: Build Docker
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@master
       - name: Build Docker
         run: cd core && make build-docker
 
@@ -32,6 +33,7 @@ jobs:
     name: Build Operator
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@master
       - name: Build Operator
         run: cd operator && make
 
@@ -39,8 +41,7 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
       - name: Lint deployer and analyzer
         uses: golangci/golangci-lint-action@v2
         with:
