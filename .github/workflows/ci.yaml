@@ -17,23 +17,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Install dependencies
-        run: cd pkg && go mod download
+        run: cd core && go mod download
       - name: Build
-        run: make build
+        run: cd core && make build
 
   build-docker:
     name: Build Docker
     runs-on: ubuntu-latest
     steps:
       - name: Build Docker
-        run: make build-docker
+        run: cd core && make build-docker
 
   build-operator:
     name: Build Operator
     runs-on: ubuntu-latest
     steps:
       - name: Build Operator
-        run: make operator
+        run: cd operator && make
 
   lint:
     name: lint
@@ -45,7 +45,7 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
-          working-directory: app
+          working-directory: core
       - name: Lint operator
         uses: golangci/golangci-lint-action@v2
         with:

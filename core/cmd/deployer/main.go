@@ -7,7 +7,7 @@ import (
 	"log"
 
 	"github.com/docker/distribution/notifications"
-	"github.com/f0m41h4u7/Charon/pkg/deployer"
+	"github.com/f0m41h4u7/Charon/core/pkg/deployer"
 	"github.com/gin-gonic/gin"
 )
 
