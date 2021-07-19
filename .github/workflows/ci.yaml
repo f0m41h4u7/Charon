@@ -47,11 +47,6 @@ jobs:
         with:
           version: latest
           working-directory: core
-      - name: Lint operator
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: operator
 
   publish:
     name: Publish Docker image

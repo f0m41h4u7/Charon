@@ -6,7 +6,6 @@
 *.dylib
 bin
 testbin/*
-hack*
 
 # Test binary, build with `go test -c`
 *.test
