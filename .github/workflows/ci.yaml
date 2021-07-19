@@ -17,7 +17,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Install dependencies
-        run: cd app && go mod download
+        run: cd pkg && go mod download
       - name: Build
         run: make build
 
@@ -35,8 +35,8 @@ jobs:
       - name: Build Operator
         run: make operator
 
-  Lint:
-    name: Lint
+  lint:
+    name: lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -70,4 +70,3 @@ jobs:
           make docker && \
           docker tag raptor/registry docker.pkg.github.com/${{ github.repository }}/registry:${GITHUB_REF##*/}-${{ github.sha }} && \
           docker push docker.pkg.github.com/${{ github.repository }}/registry:${GITHUB_REF##*/}-${{ github.sha }}
-
