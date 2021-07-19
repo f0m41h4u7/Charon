@@ -1,0 +1,28 @@
+domain: charon.cr
+layout:
+- go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: operator
+repo: github.com/f0m41h4u7/Charon/operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: charon.cr
+  group: charon
+  kind: Charon
+  path: github.com/f0m41h4u7/Charon/operator/api/v1alpha2
+  version: v1alpha2
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: charon.cr
+  group: charon
+  kind: App
+  path: github.com/f0m41h4u7/Charon/operator/api/v1alpha2
+  version: v1alpha2
+version: "3"

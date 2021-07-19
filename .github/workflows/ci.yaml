@@ -1,0 +1,49 @@
+name: CI
+on: [push]
+
+jobs:
+  build:
+    name: Build Charon core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Install dependencies
+        run: cd core && go mod download
+      - name: Build
+        run: cd core && make build
+
+  build-docker:
+    name: Build Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Build Docker
+        run: cd core && make build-docker
+
+  build-operator:
+    name: Build Operator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Build Operator
+        run: cd operator && make
+
+  lint:
+    name: GolangCI Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Lint deployer and analyzer
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          working-directory: core

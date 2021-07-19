@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: deployer-configmap
-data:
-  PROMETHEUS_HOST: # Put your Prometheus URL here
-  REGISTRY: # Put your registry name here

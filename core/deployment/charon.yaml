@@ -1,0 +1,9 @@
+apiVersion: charon.charon.cr/v1alpha2
+kind: Charon
+metadata:
+  name: charon
+  namespace: charon
+spec:
+  analyzer: charon-analyzer
+  deployerImage: charon-deployer
+  analyzerImage: charon-analyzer

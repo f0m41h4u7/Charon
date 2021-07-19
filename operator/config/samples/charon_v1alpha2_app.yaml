@@ -1,0 +1,7 @@
+apiVersion: charon.charon.cr/v1alpha2
+kind: App
+metadata:
+  name: app-sample
+spec:
+  # Add fields here
+  foo: bar
