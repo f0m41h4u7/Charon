@@ -7,13 +7,13 @@ deploy:
 
 lint:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	golangci-lint run ./app
+	golangci-lint run ./pkg
+	golangci-lint run ./operator
 
 build:
+	cd pkg
 	go build -o $(A_IMG) ./cmd/analyzer/main.go
 	go build -o $(D_IMG) ./cmd/deployer/main.go
-
-
 
 build-docker:
 	make analyzer
@@ -25,4 +25,4 @@ analyzer:
 deployer:
 	docker build -t $(D_IMG) --build-arg APP=deployer -f build/Dockerfile .
 
-.PHONY: deploy lint build analyzer deployer operator
+.PHONY: deploy lint build analyzer deployer
