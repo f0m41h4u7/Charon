@@ -1,19 +1,19 @@
-SHELL := bash
 D_IMG := charon-deployer
 A_IMG := charon-analyzer
 OP_IMG := charon-operator
-CWD := $(shell pwd)
 
 deploy:
 	./install.sh
 
 lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	golangci-lint run ./...
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	golangci-lint run ./app
 
 build:
 	go build -o $(A_IMG) ./cmd/analyzer/main.go
 	go build -o $(D_IMG) ./cmd/deployer/main.go
+
+
 
 build-docker:
 	make analyzer

@@ -1,0 +1,5 @@
+## Append samples you want in your CSV to this file as resources ##
+resources:
+- charon_v1alpha2_charon.yaml
+- charon_v1alpha2_app.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples
