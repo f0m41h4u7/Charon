@@ -60,7 +60,7 @@ type Deployer struct {
 
 func NewDeployer() *Deployer {
 	d := Deployer{
-		Address: "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/  app.custom.cr/v1alpha1/namespaces/default/app  s/",
+		Address: "https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + "/apis/app.charon.cr/v1alpha2/namespaces/default/apps/",
 	}
 	d.setToken()
 	d.setCertPool()
@@ -104,7 +104,7 @@ func (d *Deployer) createPodClient() {
 func (d *Deployer) createNewCR(name string, img string) {
 	// Create updated json config for the App
 	newApp := app{
-		ApiVersion: "app.custom.cr/v1alpha1",
+		ApiVersion: "app.charon.cr/v1alpha2",
 		Kind:       "App",
 		Metadata: metadata{
 			Name: name,
